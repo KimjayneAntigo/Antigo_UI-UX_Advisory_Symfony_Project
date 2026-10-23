@@ -1,0 +1,63 @@
+{% extends 'client/base.html.twig' %}
+
+{% block title %}Settings — Client Portal | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Account &amp; Workspace Settings</h1>
+    <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Manage your organization profile, contact preferences, and credentials.</p>
+  </div>
+
+  <!-- Profile Form Card -->
+  <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[rgba(19,34,75,0.08)] shadow-sm space-y-6">
+    <div class="flex items-center gap-4 pb-6 border-b border-gray-100 dark:border-white/10">
+      <div class="w-16 h-16 rounded-2xl bg-[#6C5BB5] text-white font-extrabold text-xl flex items-center justify-center shadow-md">
+        MS
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-[#13224B]">{{ user.name }}</h2>
+        <p class="text-xs text-[#8890AA]">{{ user.company }} &bull; Client Account</p>
+      </div>
+    </div>
+
+    <form onsubmit="alert('Profile changes saved successfully! (Mocked update)'); return false;" class="space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-xs font-bold text-[#13224B] mb-1.5">Full Name</label>
+          <input type="text" value="{{ user.name }}" 
+                 class="w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] text-xs text-[#13224B] outline-none focus:ring-1 focus:ring-[#6C5BB5]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#13224B] mb-1.5">Company Name</label>
+          <input type="text" value="{{ user.company }}" 
+                 class="w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] text-xs text-[#13224B] outline-none focus:ring-1 focus:ring-[#6C5BB5]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#13224B] mb-1.5">Email Address</label>
+          <input type="email" value="{{ user.email }}" 
+                 class="w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] text-xs text-[#13224B] outline-none focus:ring-1 focus:ring-[#6C5BB5]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#13224B] mb-1.5">Phone Number</label>
+          <input type="text" value="{{ user.phone }}" 
+                 class="w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] text-xs text-[#13224B] outline-none focus:ring-1 focus:ring-[#6C5BB5]">
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end">
+        <button type="submit" 
+                class="px-5 py-2.5 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-md transition-all">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

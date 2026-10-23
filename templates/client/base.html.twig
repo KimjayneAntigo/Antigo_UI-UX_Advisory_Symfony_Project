@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="turbo-prefetch" content="false">
+  <meta name="turbo-visit-control" content="reload">
+  <title>{% block title %}Client Portal — Antigo UI/UX Advisory{% endblock %}</title>
+
+  <!-- Early Theme Initializer (prevents flash of wrong theme) -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('antigo-theme') || localStorage.getItem('antigo_theme');
+        if (saved) document.documentElement.dataset.theme = saved;
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Iconify CDN -->
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          colors: {
+            navy: '#13224B',
+            violet: '#6C5BB5',
+            blue: '#4C6CCB',
+            'light-blue': '#DDEBFF',
+            'light-gray': '#F4F6F8',
+            'dark-gray': '#4b4b4b',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Global Design Tokens & App Styles -->
+  <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+  {% block stylesheets %}{% endblock %}
+
+  {% block javascripts %}
+    {% block importmap %}{{ importmap('app') }}{% endblock %}
+  {% endblock %}
+</head>
+<body class="min-h-screen bg-[#F4F6F8] font-poppins text-[#13224B] antialiased" data-turbo="false">
+  <div class="flex min-h-screen">
+    <!-- Client Sidebar Include -->
+    {% include '_partials/sidebar-client.html.twig' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+      <!-- Client Topbar Include -->
+      {% include '_partials/topbar-client.html.twig' %}
+
+      <!-- Page Content -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto space-y-6">
+        {% block content %}{% endblock %}
+      </main>
+
+      <!-- Dashboard Shared Footer Include -->
+      {% include '_partials/footer-dashboard.html.twig' %}
+    </div>
+  </div>
+
+  <!-- Global Dashboard Interactive Script -->
+  <script>
+    // Theme toggle with localStorage persistence
+    function toggleAntigoTheme() {
+      const root = document.documentElement;
+      const current = root.dataset.theme || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('antigo-theme', next);
+        localStorage.setItem('antigo_theme', next);
+      } catch (e) {}
+    }
+
+    // Toggle dropdown menus
+    function toggleDropdown(id, e) {
+      if (e) e.stopPropagation();
+      const target = document.getElementById(id);
+      document.querySelectorAll('.topbar-dropdown').forEach(dd => {
+        if (dd !== target) dd.classList.add('hidden');
+      });
+      if (target) target.classList.toggle('hidden');
+    }
+
+    function toggleNotificationsDropdown(id, e) {
+      toggleDropdown(id, e);
+    }
+
+    function toggleUserDropdown(id, e) {
+      toggleDropdown(id, e);
+    }
+
+    // Toggle Mobile Client Sidebar
+    function toggleClientSidebar() {
+      const sidebar = document.getElementById('client-sidebar');
+      const backdrop = document.getElementById('client-sidebar-backdrop');
+      if (sidebar) sidebar.classList.toggle('-translate-x-full');
+      if (backdrop) backdrop.classList.toggle('hidden');
+    }
+
+    // Global outside click listener
+    document.addEventListener('click', function(e) {
+      document.querySelectorAll('.topbar-dropdown').forEach(dd => {
+        if (!dd.contains(e.target) && !e.target.closest('button')) {
+          dd.classList.add('hidden');
+        }
+      });
+    });
+
+    // ESC key listener to close dropdowns & mobile sidebar
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.topbar-dropdown').forEach(dd => dd.classList.add('hidden'));
+        const sidebar = document.getElementById('client-sidebar');
+        const backdrop = document.getElementById('client-sidebar-backdrop');
+        if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+          sidebar.classList.add('-translate-x-full');
+          if (backdrop) backdrop.classList.add('hidden');
+        }
+      }
+    });
+
+    // Auto-close mobile backdrop if resized to desktop breakpoint
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 1024) {
+        const backdrop = document.getElementById('client-sidebar-backdrop');
+        if (backdrop && !backdrop.classList.contains('hidden')) {
+          backdrop.classList.add('hidden');
+        }
+        const sidebar = document.getElementById('client-sidebar');
+        if (sidebar && sidebar.classList.contains('-translate-x-full')) {
+          sidebar.classList.remove('-translate-x-full');
+        }
+      }
+    });
+  </script>
+
+  <!-- Shared Phase 2 Toast Handler -->
+  {% include '_partials/phase2-handler.html.twig' %}
+</body>
+</html>

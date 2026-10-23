@@ -1,0 +1,66 @@
+{# Phase 2 Interceptor & Toast Component #}
+<div id="phase2-toast-container" 
+     class="fixed bottom-6 right-6 z-[99999] flex flex-col gap-2.5 pointer-events-none select-none max-w-sm w-full px-4 sm:px-0"
+     aria-live="polite"></div>
+
+<script>
+  (function() {
+    function showPhase2Toast(customMessage) {
+      const container = document.getElementById('phase2-toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto transform transition-all duration-300 ease-out translate-y-4 opacity-0 p-4 rounded-2xl bg-[#13224B] text-white border border-white/20 shadow-2xl flex items-start gap-3 text-xs';
+      toast.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-[#4C6CCB]/30 text-[#DDEBFF] border border-[#4C6CCB]/40 flex items-center justify-center flex-shrink-0 text-base mt-0.5">
+          <iconify-icon icon="lucide:database"></iconify-icon>
+        </div>
+        <div class="flex-1 min-w-0 pr-1">
+          <p class="font-bold text-white text-xs leading-snug">${customMessage || 'Available once the database is connected.'}</p>
+          <p class="text-[10px] text-[#DDEBFF]/70 mt-0.5 leading-tight">This interactive control is queued for Phase 2 data wiring.</p>
+        </div>
+        <button type="button" class="text-white/40 hover:text-white transition-colors p-0.5 flex-shrink-0" onclick="this.closest('div').remove()">
+          <iconify-icon icon="lucide:x" class="text-sm"></iconify-icon>
+        </button>
+      `;
+
+      container.appendChild(toast);
+
+      // Trigger enter animation
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      });
+
+      // Auto dismiss after 3.8s
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3800);
+    }
+
+    // Capture click on any [data-phase2] element
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-phase2]');
+      if (btn) {
+        // If it's a link or button, intercept
+        e.preventDefault();
+        e.stopPropagation();
+        const actionLabel = btn.getAttribute('data-phase2-label') || btn.getAttribute('data-phase2');
+        showPhase2Toast('Available once the database is connected.');
+      }
+    }, true);
+
+    // Capture submit on any [data-phase2] form or forms with submit button containing data-phase2
+    document.addEventListener('submit', function(e) {
+      const form = e.target;
+      const phase2Btn = form.querySelector('[data-phase2]');
+      if (form.hasAttribute('data-phase2') || phase2Btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        showPhase2Toast('Available once the database is connected.');
+      }
+    }, true);
+
+    window.showPhase2Toast = showPhase2Toast;
+  })();
+</script>

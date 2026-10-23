@@ -1,0 +1,132 @@
+{# Admin Sidebar Partial #}
+{% set currentRoute = app.request.attributes.get('_route') %}
+{% set inquiriesBadge = inquiriesPendingCount|default(1) %}
+{% set paymentsBadge = paymentsPendingCount|default(2) %}
+
+<!-- Mobile Sidebar Backdrop -->
+<div id="admin-sidebar-backdrop" 
+     onclick="toggleAdminSidebar()" 
+     class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity"></div>
+
+<!-- Admin Sidebar -->
+<aside id="admin-sidebar" data-turbo="false" data-turbo-prefetch="false"
+       class="fixed inset-y-0 left-0 z-40 w-64 bg-[#13224B] text-white flex flex-col justify-between py-6 px-4 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:max-h-screen lg:self-start lg:flex-shrink-0 select-none border-r border-white/10 shadow-2xl lg:shadow-none overflow-y-auto sidebar-scroll">
+  
+  <!-- Top: Logo & Navigation -->
+  <div class="space-y-6">
+    <!-- Brand / Studio Logo -->
+    <div class="flex items-center justify-between px-2">
+           <a href="{{ path('admin_overview') }}" class="flex items-center gap-3 group" title="Antigo UI/UX Advisory — Studio Command Center">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm transition-transform duration-200 group-hover:scale-105 flex-shrink-0">
+          <img src="{{ asset('images/antigo-mark.png') }}" alt="Antigo Logo" class="w-full h-full object-contain">
+        </div>
+        <div class="flex flex-col justify-center leading-none">
+          <span class="font-extrabold text-[16px] tracking-wide text-white uppercase font-poppins leading-none">ANTIGO</span>
+          <span class="text-[9px] font-semibold tracking-widest text-[#DDEBFF] uppercase mt-1 font-poppins leading-none">UI/UX ADVISORY</span>
+        </div>
+      </a>
+
+      <!-- Mobile Close Button -->
+      <button type="button" 
+              onclick="toggleAdminSidebar()" 
+              class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close sidebar">
+        <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+      </button>
+    </div>
+
+    <!-- Navigation List -->
+    <nav class="space-y-1.5 pt-2" data-turbo="false" data-turbo-prefetch="false" aria-label="Admin Navigation">
+      <!-- 1. Overview -->
+      <a href="{{ path('admin_overview') }}" 
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_overview' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:layout-dashboard" class="text-lg {{ currentRoute == 'admin_overview' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <span>Dashboard</span>
+        </div>
+      </a>
+
+      <!-- 2. Inquiries -->
+      <a href="{{ path('admin_inquiries') }}" 
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_inquiries' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:inbox" class="text-lg {{ currentRoute == 'admin_inquiries' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <span>Inquiries</span>
+        </div>
+        {% if inquiriesBadge > 0 %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6C5BB5] text-white shadow-sm">
+            {{ inquiriesBadge }}
+          </span>
+        {% endif %}
+      </a>
+
+      <!-- 3. Payments -->
+      <a href="{{ path('admin_payments') }}" 
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_payments' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:credit-card" class="text-lg {{ currentRoute == 'admin_payments' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <span>Payments</span>
+        </div>
+        {% if paymentsBadge > 0 %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#4C6CCB] text-white shadow-sm">
+            {{ paymentsBadge }}
+          </span>
+        {% endif %}
+      </a>
+
+      <!-- 4. Bookings -->
+      <a href="{{ path('admin_bookings') }}" 
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_bookings' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:calendar" class="text-lg {{ currentRoute == 'admin_bookings' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <span>Bookings</span>
+        </div>
+      </a>
+
+      <!-- 5. Projects -->
+      <a href="{{ path('admin_projects') }}" 
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_projects' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:folder-kanban" class="text-lg {{ currentRoute == 'admin_projects' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <span>Projects</span>
+        </div>
+      </a>
+
+      <!-- 6. Clients -->
+      <a href="{{ path('admin_clients') }}" 
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_clients' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:users" class="text-lg {{ currentRoute == 'admin_clients' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <span>Clients</span>
+        </div>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Bottom: Admin User Snippet -->
+  <div class="pt-4 border-t border-white/10 mt-auto">
+    <div class="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-white/5 transition-colors">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="relative flex-shrink-0">
+          <img src="{{ asset('images/profile.png') }}" 
+               alt="Kimberly Jayne" 
+               class="w-9 h-9 rounded-full object-cover border border-white/20 shadow-sm"
+               onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+          <div class="hidden w-9 h-9 rounded-full bg-[#4C6CCB] text-white font-bold text-xs items-center justify-center">KJ</div>
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#13224B]"></span>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-white truncate">Kimberly Jayne</span>
+          <span class="text-[10px] text-[#8E9CC0] font-medium">Admin</span>
+        </div>
+      </div>
+
+      <!-- Quick Switch to Client or Sign Out -->
+      <a href="{{ path('client_dashboard') }}" 
+         title="Switch to Client Portal View" 
+         class="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E9CC0] hover:text-white hover:bg-white/10 transition-colors">
+        <iconify-icon icon="lucide:arrow-right-left" class="text-sm"></iconify-icon>
+      </a>
+    </div>
+  </div>
+</aside>

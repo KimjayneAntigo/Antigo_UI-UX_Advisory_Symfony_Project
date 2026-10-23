@@ -1,0 +1,116 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Payments &amp; Settlements — Studio Admin | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Payments &amp; Settlement Verification</h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Verify manual client payment declarations, review receipts, and reconcile project settlements.</p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <span class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/60 text-xs font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+        Awaiting Verification: {{ paymentsPendingCount|default(2) }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="flex items-center gap-2 flex-wrap">
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
+      All ({{ stats.total|default(3) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#0E1638] text-[#4b4b4b] dark:text-[#B7BEE0] border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/10 transition-all">
+      Pending ({{ stats.pending|default(2) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#0E1638] text-[#4b4b4b] dark:text-[#B7BEE0] border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/10 transition-all">
+      Verified ({{ stats.verified|default(1) }})
+    </button>
+  </div>
+
+  <!-- Payments Table Card -->
+  <div class="bg-white rounded-3xl border border-[rgba(19,34,75,0.08)] shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] text-[#8890AA] uppercase tracking-wider font-bold">
+          <tr>
+            <th class="py-4 px-6">Payment Ref</th>
+            <th class="py-4 px-6">Project Code &amp; Title</th>
+            <th class="py-4 px-6">Client &amp; Company</th>
+            <th class="py-4 px-6">Amount ($ USD)</th>
+            <th class="py-4 px-6">Method</th>
+            <th class="py-4 px-6">Status</th>
+            <th class="py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[rgba(19,34,75,0.05)]">
+          {% for pay in payments %}
+            <tr class="hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors">
+              <td class="py-4 px-6">
+                <span class="font-mono text-xs font-bold text-[#13224B] block">{{ pay.ref }}</span>
+                <span class="text-[11px] text-[#8890AA] block mt-0.5">{{ pay.submitted_at }}</span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="font-mono text-[10.5px] font-bold text-[#6C5BB5] block">{{ pay.project_code }}</span>
+                <span class="font-bold text-[#13224B] text-xs">{{ pay.project_title }}</span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="font-semibold text-[#13224B] block">{{ pay.client_name }}</span>
+                <span class="text-[11px] text-[#8890AA]">{{ pay.client_company }}</span>
+              </td>
+              <td class="py-4 px-6 font-mono text-sm font-extrabold text-[#13224B]">
+                {{ pay.amount }}
+              </td>
+              <td class="py-4 px-6">
+                <span class="px-2.5 py-1 rounded-lg bg-[#F4F6F8] dark:bg-white/10 font-medium text-[#13224B] text-[11px]">
+                  {{ pay.method }}
+                </span>
+              </td>
+              <td class="py-4 px-6">
+                {% if pay.status == 'pending' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] badge-pending whitespace-nowrap">
+                    Pending Verification
+                  </span>
+                {% elseif pay.status == 'verified' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] badge-verified whitespace-nowrap">
+                    Verified
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-700 badge-rejected whitespace-nowrap">
+                    {{ pay.status|capitalize }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-4 px-6 text-right space-x-2">
+                {% if pay.status == 'pending' %}
+                  <button type="button" 
+                          onclick="alert('Payment verified: {{ pay.ref }}')" 
+                          class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all">
+                    Verify
+                  </button>
+                  <button type="button" 
+                          onclick="alert('Payment flagged: {{ pay.ref }}')" 
+                          class="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-xs font-semibold transition-colors">
+                    Reject
+                  </button>
+                {% else %}
+                  <button type="button" 
+                          onclick="alert('Viewing receipt: {{ pay.receipt_file }}')" 
+                          class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#13224B] dark:text-[#EEF1FF] hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-xs font-semibold transition-colors">
+                    Receipt
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

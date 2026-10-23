@@ -1,3 +1,556 @@
+/* ==========================================================================
+   Antigo UI/UX Advisory Design Tokens & Global Dashboard Styles
+   Ported from Antigo_WebApp/css/style.css
+   ========================================================================== */
+
+:root {
+  --navy: #13224B;
+  --violet: #6C5BB5;
+  --blue: #4C6CCB;
+  --white: #FFFFFF;
+  --light-blue: #DDEBFF;
+  --light-gray: #F4F6F8;
+  --dark-gray: #4b4b4b;
+
+  --bg: #FFFFFF;
+  --bg-alt: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #F4F6F8;
+  --text: #13224B;
+  --text-soft: #4b4b4b;
+  --text-faint: #8890AA;
+  --border: rgba(19, 34, 75, 0.08);
+  --glass: rgba(255, 255, 255, 0.85);
+
+  --grad: linear-gradient(100deg, #13224B 0%, #6C5BB5 55%, #4C6CCB 100%);
+  --grad-soft: linear-gradient(135deg, #4C6CCB, #6C5BB5);
+  --grad-text: linear-gradient(100deg, #4C6CCB, #6C5BB5);
+
+  --shadow-sm: 0 2px 10px -4px rgba(19, 34, 75, 0.08);
+  --shadow-md: 0 20px 40px -20px rgba(19, 34, 75, 0.18);
+  --shadow-lg: 0 30px 70px -25px rgba(19, 34, 75, 0.25);
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+}
+
+[data-theme="dark"] {
+  --bg: #0B1230;
+  --bg-alt: #0E1638;
+  --surface: #121B42;
+  --surface-2: #0E1638;
+  --text: #EEF1FF;
+  --text-soft: #B7BEE0;
+  --text-faint: #7982B0;
+  --border: rgba(255, 255, 255, 0.09);
+  --glass: rgba(18, 27, 66, 0.85);
+  --shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 20px 40px -20px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 30px 80px -25px rgba(0, 0, 0, 0.7);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-    background-color: skyblue;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-alt);
+  color: var(--text);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(19, 34, 75, 0.15);
+  border-radius: 9999px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Theme toggle display helpers */
+.light-hidden {
+  display: none !important;
+}
+
+[data-theme="dark"] .light-hidden {
+  display: inline-flex !important;
+}
+
+[data-theme="dark"] .dark-hidden {
+  display: none !important;
+}
+
+/* Dark mode overrides for dashboard cards and containers */
+[data-theme="dark"] body {
+  background-color: var(--bg-alt);
+  color: var(--text);
+}
+
+[data-theme="dark"] .dashboard-footer {
+  border-color: var(--border) !important;
+  color: var(--text-faint) !important;
+}
+
+[data-theme="dark"] .bg-white {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .bg-\[\#F4F6F8\] {
+  background-color: var(--bg-alt) !important;
+}
+
+[data-theme="dark"] .text-\[\#13224B\] {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .text-\[\#4b4b4b\] {
+  color: var(--text-soft) !important;
+}
+
+[data-theme="dark"] .text-\[\#8890AA\] {
+  color: var(--text-faint) !important;
+}
+
+[data-theme="dark"] .border-\[rgba\(19\,34\,75\,0\.08\)\],
+[data-theme="dark"] .border-\[rgba\(19\,34\,75\,0\.1\)\] {
+  border-color: var(--border) !important;
+}
+
+/* ==========================================================================
+   Dashboard Topbar & Controls (Unified Brand Navy #13224B in both Light & Dark Mode)
+   Matches Image 1 (Admin) & Image 2 (Client) Visual Specifications
+   ========================================================================== */
+
+.dashboard-topbar,
+[data-theme="dark"] .dashboard-topbar {
+  background-color: #13224B !important;
+  color: #FFFFFF !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.topbar-search-input,
+[data-theme="dark"] .topbar-search-input {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.topbar-search-input:hover,
+[data-theme="dark"] .topbar-search-input:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.topbar-search-input:focus,
+[data-theme="dark"] .topbar-search-input:focus {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: #4C6CCB !important;
+}
+
+.topbar-search-input::placeholder,
+[data-theme="dark"] .topbar-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.topbar-control-btn,
+[data-theme="dark"] .topbar-control-btn {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.topbar-control-btn:hover,
+[data-theme="dark"] .topbar-control-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #FFFFFF !important;
+}
+
+.topbar-dropdown,
+[data-theme="dark"] .topbar-dropdown {
+  background-color: #13224B !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7) !important;
+}
+
+.topbar-dropdown-divider,
+[data-theme="dark"] .topbar-dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.topbar-dropdown-item:hover,
+[data-theme="dark"] .topbar-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+/* Custom interactive pill button */
+.btn-antigo-primary {
+  background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);
+  color: #FFFFFF;
+  transition: all 0.2s ease;
+}
+
+.btn-antigo-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(76, 108, 203, 0.5);
+}
+
+.btn-antigo-gradient {
+  background: linear-gradient(100deg, #13224B 0%, #6C5BB5 55%, #4C6CCB 100%);
+  color: #FFFFFF;
+  transition: all 0.2s ease;
+}
+
+.btn-antigo-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -6px rgba(108, 91, 181, 0.5);
+}
+
+/* Sidebar sleek custom scroll */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+/* ==========================================================================
+   Advisor Card & Global Dark Mode Protection
+   Ported from Antigo_WebApp
+   ========================================================================== */
+
+/* Cards & Containers */
+.dashboard-card {
+  background: var(--surface, #FFFFFF);
+  border: 1px solid var(--border, rgba(19, 34, 75, 0.08));
+  border-radius: 20px;
+  box-shadow: 0 4px 18px -4px rgba(19, 34, 75, 0.05);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+[data-theme="dark"] .dashboard-card {
+  background-color: #121B42 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 18px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Advisor Card */
+.advisor-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F4F6F8 100%);
+  border: 1px solid var(--border, rgba(19, 34, 75, 0.08));
+  border-radius: 20px;
+  box-shadow: 0 4px 18px -4px rgba(19, 34, 75, 0.05);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.advisor-card h4,
+.advisor-card .advisor-title {
+  color: #13224B;
+}
+
+.advisor-card .advisor-desc {
+  color: #4b4b4b;
+}
+
+[data-theme="dark"] .advisor-card,
+[data-theme="dark"] .dashboard-card[class*="from-white"],
+[data-theme="dark"] .card[class*="from-white"],
+[data-theme="dark"] [class*="from-white"] {
+  background: linear-gradient(135deg, #121B42 0%, #0E1638 100%) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .advisor-card h4,
+[data-theme="dark"] .advisor-card .advisor-title {
+  color: #EEF1FF !important;
+}
+
+[data-theme="dark"] .advisor-card .advisor-desc {
+  color: #B7BEE0 !important;
+}
+
+[data-theme="dark"] .advisor-avatar {
+  border-color: #4C6CCB !important;
+}
+
+
+/* ==========================================================================
+   Dark Mode Visibility Protection (Status Badges, Tables, Forms, Buttons)
+   Ported & Enhanced for Both Admin and Client Portals
+   ========================================================================== */
+
+/* 1. Light Blue Badges & Chips (e.g. Design, Contacted, Active)
+   Fixes: White-on-white text in dark mode */
+[data-theme="dark"] .bg-\[\#DDEBFF\] {
+  background-color: rgba(76, 108, 203, 0.22) !important;
+  color: #DDEBFF !important;
+  border: 1px solid rgba(76, 108, 203, 0.45) !important;
+}
+[data-theme="dark"] .bg-\[\#DDEBFF\] * {
+  color: #DDEBFF !important;
+}
+[data-theme="dark"] a.bg-\[\#DDEBFF\]:hover,
+[data-theme="dark"] button.bg-\[\#DDEBFF\]:hover {
+  background-color: #4C6CCB !important;
+  color: #FFFFFF !important;
+  border-color: #4C6CCB !important;
+}
+[data-theme="dark"] a.bg-\[\#DDEBFF\]:hover *,
+[data-theme="dark"] button.bg-\[\#DDEBFF\]:hover * {
+  color: #FFFFFF !important;
+}
+
+/* 2. Amber / Yellow Badges & Chips (e.g. Testing, Pending Verification, New Lead)
+   Fixes: Blinding pale cream/white glare in dark mode */
+[data-theme="dark"] .bg-\[\#FFF1D6\] {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #FCD34D !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+[data-theme="dark"] .bg-\[\#FFF1D6\] * {
+  color: #FCD34D !important;
+}
+
+/* 3. Emerald / Green Badges & Chips (e.g. Delivered, Verified, Converted)
+   Fixes: Blinding pale mint glare in dark mode */
+[data-theme="dark"] .bg-\[\#DFF6E8\] {
+  background-color: rgba(18, 122, 69, 0.22) !important;
+  color: #6EE7B7 !important;
+  border: 1px solid rgba(18, 122, 69, 0.4) !important;
+}
+[data-theme="dark"] .bg-\[\#DFF6E8\] * {
+  color: #6EE7B7 !important;
+}
+
+/* 4. Rose / Red Badges & Buttons (e.g. Rejected, Cancelled, Flagged) */
+[data-theme="dark"] .bg-rose-100 {
+  background-color: rgba(239, 68, 68, 0.18) !important;
+  color: #FCA5A5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+[data-theme="dark"] .bg-rose-100 * {
+  color: #FCA5A5 !important;
+}
+[data-theme="dark"] .border-rose-200,
+[data-theme="dark"] .border-rose-300 {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+[data-theme="dark"] .text-rose-600,
+[data-theme="dark"] .text-rose-700 {
+  color: #FCA5A5 !important;
+}
+[data-theme="dark"] .hover\:bg-rose-50:hover,
+[data-theme="dark"] button.hover\:bg-rose-50:hover {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* 5. Purple / Violet Badges (e.g. Review, Reviewed, Sprint phases) */
+[data-theme="dark"] .bg-purple-100,
+[data-theme="dark"] .bg-violet-50 {
+  background-color: rgba(108, 91, 181, 0.25) !important;
+  color: #C4B5FD !important;
+  border: 1px solid rgba(108, 91, 181, 0.4) !important;
+}
+[data-theme="dark"] .bg-purple-100 *,
+[data-theme="dark"] .bg-violet-50 * {
+  color: #C4B5FD !important;
+}
+
+/* 6. Semantic Status Badge Classes */
+[data-theme="dark"] .badge-pending,
+[data-theme="dark"] .badge-new,
+[data-theme="dark"] .badge-testing {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #FCD34D !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+[data-theme="dark"] .badge-confirmed,
+[data-theme="dark"] .badge-active,
+[data-theme="dark"] .badge-contacted,
+[data-theme="dark"] .badge-design {
+  background-color: rgba(76, 108, 203, 0.22) !important;
+  color: #DDEBFF !important;
+  border: 1px solid rgba(76, 108, 203, 0.45) !important;
+}
+[data-theme="dark"] .badge-completed,
+[data-theme="dark"] .badge-converted,
+[data-theme="dark"] .badge-verified,
+[data-theme="dark"] .badge-delivered {
+  background-color: rgba(18, 122, 69, 0.22) !important;
+  color: #6EE7B7 !important;
+  border: 1px solid rgba(18, 122, 69, 0.4) !important;
+}
+[data-theme="dark"] .badge-cancelled,
+[data-theme="dark"] .badge-rejected,
+[data-theme="dark"] .badge-lost {
+  background-color: rgba(239, 68, 68, 0.18) !important;
+  color: #FCA5A5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+[data-theme="dark"] .badge-review,
+[data-theme="dark"] .badge-reviewed {
+  background-color: rgba(108, 91, 181, 0.25) !important;
+  color: #C4B5FD !important;
+  border: 1px solid rgba(108, 91, 181, 0.4) !important;
+}
+
+/* Ensure .hidden always takes absolute precedence */
+.hidden,
+[hidden] {
+  display: none !important;
+}
+
+/* 7. Pill & Badge Layout (Prevents broken text wrapping on badges without affecting avatars or buttons) */
+.badge-status,
+.badge-pending,
+.badge-verified,
+.badge-rejected,
+.badge-cancelled,
+.badge-new,
+.badge-active,
+.badge-design,
+.badge-testing,
+.badge-delivered,
+.badge-confirmed,
+.badge-contacted,
+.badge-converted,
+.badge-review,
+.badge-reviewed,
+span[class*="rounded-full"][class*="bg-"] {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 8. Dark Mode Tables (Thead, Th, Tr, Td) */
+[data-theme="dark"] table thead,
+[data-theme="dark"] table thead tr,
+[data-theme="dark"] table thead th,
+[data-theme="dark"] thead tr[class*="bg-"] {
+  background-color: #0E1638 !important;
+  color: #B7BEE0 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] table thead tr th {
+  color: #B7BEE0 !important;
+}
+[data-theme="dark"] table tbody tr {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] table tbody tr:hover,
+[data-theme="dark"] tr[class*="hover:bg-"]:hover {
+  background-color: rgba(76, 108, 203, 0.08) !important;
+}
+[data-theme="dark"] table tbody td {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* 9. Dark Mode Filter Tabs & Inactive Buttons (Fixes blinding white background on filter buttons) */
+[data-theme="dark"] button.bg-white,
+[data-theme="dark"] a.bg-white:not(.btn-primary):not([class*="from-"]):not([class*="bg-[#13224B]"]) {
+  background-color: #0E1638 !important;
+  color: #B7BEE0 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] button.bg-white:hover,
+[data-theme="dark"] a.bg-white:hover {
+  background-color: rgba(76, 108, 203, 0.18) !important;
+  color: #EEF1FF !important;
+  border-color: rgba(76, 108, 203, 0.35) !important;
+}
+
+/* 10. Neutral Action Buttons (View, Files, Receipt, Details) */
+[data-theme="dark"] a[class*="border-[rgba(19,34,75,"],
+[data-theme="dark"] button[class*="border-[rgba(19,34,75,"],
+[data-theme="dark"] .border-\[rgba\(19\,34\,75\,0\.1\)\],
+[data-theme="dark"] .border-\[rgba\(19\,34\,75\,0\.08\)\],
+[data-theme="dark"] .border-\[rgba\(19\,34\,75\,0\.06\)\],
+[data-theme="dark"] .border-\[rgba\(19\,34\,75\,0\.04\)\],
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] a[class*="hover:bg-[#F4F6F8]"]:hover,
+[data-theme="dark"] button[class*="hover:bg-[#F4F6F8]"]:hover,
+[data-theme="dark"] [class*="hover:bg-[#F4F6F8]"]:hover,
+[data-theme="dark"] a[class*="hover:bg-white"]:hover,
+[data-theme="dark"] button[class*="hover:bg-white"]:hover,
+[data-theme="dark"] [class*="hover:bg-white"]:hover {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  color: #EEF1FF !important;
+}
+
+/* 11. Form Inputs & Placeholders */
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not(.topbar-search-input),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: #0E1638 !important;
+  color: #EEF1FF !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+[data-theme="dark"] input:not(.topbar-search-input)::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #7982B0 !important;
+}
+
+/* 12. Project Card Rows and Secondary Containers */
+[data-theme="dark"] .bg-\[\#F4F6F8\] {
+  background-color: #0E1638 !important;
+}
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-slate-50 {
+  background-color: #0E1638 !important;
+}
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] .bg-gray-200 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
 }

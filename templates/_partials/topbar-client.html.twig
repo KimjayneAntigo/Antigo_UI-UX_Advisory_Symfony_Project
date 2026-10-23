@@ -1,0 +1,180 @@
+{# Client Topbar Partial #}
+{% set notifTotal = 5 %}
+
+<header class="dashboard-topbar sticky top-0 z-40 w-full h-[70px] bg-[#13224B] text-white border-b border-white/10 px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-colors shadow-md select-none" data-turbo="false" data-turbo-prefetch="false">
+  <!-- Left: Mobile Menu Toggle & Context Breadcrumbs -->
+  <div class="flex items-center gap-3">
+    <!-- Hamburger button for mobile sidebar -->
+    <button type="button" 
+            onclick="toggleClientSidebar()" 
+            class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            aria-label="Open sidebar">
+      <iconify-icon icon="lucide:menu" class="text-xl"></iconify-icon>
+    </button>
+
+    <!-- Context Breadcrumb / Section Header -->
+    <div class="hidden sm:flex items-center gap-2 text-xs">
+      <span class="text-[#DDEBFF]/60 font-medium">Workspace</span>
+      <span class="text-white/30">/</span>
+      <span class="text-white font-bold tracking-tight">{{ pageTitle|default('Client Portal') }}</span>
+    </div>
+  </div>
+
+  <!-- Right: Client Topbar Controls (Matches Image 2) -->
+  <div class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+    
+    <!-- 1. "Start New Project" Button matching Image 2 -->
+    <button type="button"
+            data-phase2="start_project_wizard"
+            data-phase2-label="Start New Project Wizard"
+            title="Start a new design advisory sprint"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-bold shadow-sm transition-all flex-shrink-0 cursor-pointer">
+      <iconify-icon icon="lucide:plus-circle" class="text-sm text-[#4C6CCB]"></iconify-icon>
+      <span class="font-bold text-white">Start New Project</span>
+    </button>
+
+    <!-- Spacer / Divider matching Image 2 -->
+    <div class="h-6 w-[1px] bg-white/15 hidden sm:block"></div>
+
+    <!-- 3. Theme Toggle with LocalStorage Persistence matching Image 2 -->
+    <button type="button"
+            id="themeToggleBtnClient"
+            onclick="toggleAntigoTheme()"
+            aria-label="Toggle dark mode"
+            title="Toggle light / dark mode"
+            class="topbar-control-btn w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer">
+      <iconify-icon icon="lucide:moon" class="text-base dark-hidden"></iconify-icon>
+      <iconify-icon icon="lucide:sun" class="text-base light-hidden text-amber-300"></iconify-icon>
+    </button>
+
+    <!-- 4. Notifications Bell with Amber/Yellow Badge matching Image 2 -->
+    <div class="relative" id="client-bell-wrapper">
+      <button type="button"
+              id="client-bell-btn"
+              onclick="toggleNotificationsDropdown('client-notifications-dropdown', event)"
+              title="Notifications"
+              class="topbar-control-btn relative w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer">
+        <iconify-icon icon="lucide:bell" class="text-base"></iconify-icon>
+        {% if notifTotal > 0 %}
+          <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-amber-950 text-[10px] font-extrabold flex items-center justify-center ring-2 ring-[#13224B]">
+            {{ notifTotal > 99 ? '99+' : notifTotal }}
+          </span>
+        {% endif %}
+      </button>
+
+      <!-- Notifications Dropdown Menu (Rich Navy matching Image 2) -->
+      <div id="client-notifications-dropdown"
+           class="topbar-dropdown hidden absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-[#13224B] border border-white/15 shadow-2xl py-3 text-xs text-white z-50 animate-fade-in">
+        <div class="px-4 pb-2.5 mb-1 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm text-white">Notifications</span>
+            {% if notifTotal > 0 %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-amber-950 leading-none">
+                {{ notifTotal }} new
+              </span>
+            {% endif %}
+          </div>
+          <span class="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Project Alerts</span>
+        </div>
+
+        <div class="max-h-80 overflow-y-auto divide-y divide-white/5">
+          <!-- Notification 1 -->
+          <a href="{{ path('client_files') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+              <iconify-icon icon="lucide:receipt"></iconify-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-amber-300 truncate">Invoice Ready</span>
+                <span class="text-[10px] text-white/50 whitespace-nowrap font-mono">PRJ-2998</span>
+              </div>
+              <p class="text-[11px] text-white/90 line-clamp-1 mt-0.5">Your project 'Brand Refresh — Web' is completed — click to review.</p>
+            </div>
+          </a>
+
+          <!-- Notification 2 -->
+          <a href="{{ path('client_files') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+            <div class="w-8 h-8 rounded-full bg-blue-500/20 text-[#DDEBFF] border border-blue-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+              <iconify-icon icon="lucide:file-up"></iconify-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-white truncate">Deliverable Uploaded</span>
+                <span class="text-[10px] text-white/50 whitespace-nowrap">2 hrs ago</span>
+              </div>
+              <p class="text-[11px] text-white/70 line-clamp-1 mt-0.5">Kimberly uploaded "Final_UI_Kit_v3.fig"</p>
+            </div>
+          </a>
+
+          <!-- Notification 3 -->
+          <a href="{{ path('client_messages') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+            <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+              <iconify-icon icon="lucide:message-square"></iconify-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-white truncate">Message from Kimberly</span>
+                <span class="text-[10px] text-white/50 whitespace-nowrap">10:14 AM</span>
+              </div>
+              <p class="text-[11px] text-white/70 line-clamp-1 mt-0.5">"I've uploaded the updated variant kit to Files for review."</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="pt-2 px-4 border-t border-white/10 mt-1 flex items-center justify-between text-[11px]">
+          <a href="{{ path('client_projects') }}" class="text-[#DDEBFF] hover:underline font-semibold">View All Projects &rarr;</a>
+          <a href="{{ path('client_dashboard') }}" class="text-[#DDEBFF] hover:underline font-semibold">Dashboard &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Client User Pill Button & Dropdown matching Image 2 -->
+    <div class="relative" id="client-user-wrapper">
+      <button type="button"
+              id="client-user-btn"
+              onclick="toggleUserDropdown('client-user-dropdown', event)"
+              class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 transition-all text-white cursor-pointer shadow-sm group">
+        <div class="w-7 h-7 rounded-full bg-[#4C6CCB] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+          D
+        </div>
+        <span class="text-xs font-semibold text-white tracking-wide">Demo</span>
+        <iconify-icon icon="lucide:chevron-down" class="text-xs text-white/70 transition-transform group-hover:text-white"></iconify-icon>
+      </button>
+
+      <!-- Client User Dropdown (Rich Navy matching Image 2) -->
+      <div id="client-user-dropdown"
+           class="topbar-dropdown hidden absolute right-0 mt-2.5 w-60 rounded-2xl bg-[#13224B] border border-white/15 shadow-2xl py-2 text-xs text-white z-50 animate-fade-in">
+        <div class="px-4 py-2.5 border-b border-white/10">
+          <p class="font-bold text-white truncate">Demo Client</p>
+          <p class="text-[11px] text-[#DDEBFF]/80 truncate mt-0.5">demo@client.com</p>
+        </div>
+        <div class="py-1">
+          <a href="{{ path('client_settings') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:settings" class="text-sm text-[#4C6CCB]"></iconify-icon>
+            <span>Account Settings &amp; Profile</span>
+          </a>
+          <a href="{{ path('client_projects') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:folder-kanban" class="text-sm text-[#6C5BB5]"></iconify-icon>
+            <span>My Projects</span>
+          </a>
+          <a href="{{ path('client_files') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:file-text" class="text-sm text-amber-400"></iconify-icon>
+            <span>Deliverables &amp; Files</span>
+          </a>
+          <a href="{{ path('admin_overview') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:shield" class="text-sm text-emerald-400"></iconify-icon>
+            <span>Switch to Studio Admin</span>
+          </a>
+        </div>
+        <div class="border-t border-white/10 pt-1 mt-1">
+          <a href="#" onclick="alert('Session sign-out placeholder — authentication will be integrated in Phase 2'); return false;"
+             class="flex items-center gap-2.5 px-4 py-2 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 transition-colors">
+            <iconify-icon icon="lucide:log-out" class="text-sm"></iconify-icon>
+            <span>Sign Out</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>

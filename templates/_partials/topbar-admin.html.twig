@@ -1,0 +1,285 @@
+{# Admin Topbar Partial #}
+{% set notifTotal = (inquiriesPendingCount|default(1)) + (paymentsPendingCount|default(2)) %}
+
+<header class="dashboard-topbar sticky top-0 z-40 w-full h-[70px] bg-[#13224B] text-white border-b border-white/10 px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-colors shadow-md select-none" data-turbo="false" data-turbo-prefetch="false">
+  <!-- Left: Mobile Menu Toggle & Context Breadcrumbs -->
+  <div class="flex items-center gap-3">
+    <!-- Hamburger button for mobile sidebar -->
+    <button type="button" 
+            onclick="toggleAdminSidebar()" 
+            class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            aria-label="Open sidebar">
+      <iconify-icon icon="lucide:menu" class="text-xl"></iconify-icon>
+    </button>
+
+    <!-- Context Breadcrumb / Section Header -->
+    <div class="hidden sm:flex items-center gap-2 text-xs">
+      <span class="text-[#DDEBFF]/60 font-medium">Studio</span>
+      <span class="text-white/30">/</span>
+      <span class="text-white font-bold tracking-tight">{{ pageTitle|default('Command Center') }}</span>
+    </div>
+  </div>
+
+  <!-- Right: Admin Topbar Controls (Matches Image 1) -->
+  <div class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+    
+    <!-- 1. Search Bar (Translucent Pill matching Image 1) -->
+    <div class="relative hidden md:block">
+      <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-xs pointer-events-none"></iconify-icon>
+      <input type="text"
+             name="q"
+             placeholder="Search studio..."
+             class="topbar-search-input pl-8 pr-3 py-1.5 w-32 lg:w-44 xl:w-52 rounded-full bg-white/10 hover:bg-white/15 focus:bg-white/20 border border-white/15 text-xs text-white placeholder-white/50 outline-none focus:ring-1 focus:ring-[#4C6CCB] transition-all">
+    </div>
+
+    <!-- 2. "+ Quick Add" Button (Solid Blue Pill matching Image 1) -->
+    <button type="button"
+            onclick="openAdminQuickAddModal()"
+            title="Quickly create a project without inquiry"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-sm transition-all flex-shrink-0 cursor-pointer">
+      <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+      <span class="hidden sm:inline">Quick Add</span>
+    </button>
+
+    <!-- Spacer / Divider matching Image 1 -->
+    <div class="h-6 w-[1px] bg-white/15 hidden sm:block"></div>
+
+    <!-- 3. Theme Toggle with LocalStorage Persistence matching Image 1 -->
+    <button type="button"
+            id="themeToggleBtnAdmin"
+            onclick="toggleAntigoTheme()"
+            aria-label="Toggle dark mode"
+            title="Toggle light / dark mode"
+            class="topbar-control-btn w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer">
+      <iconify-icon icon="lucide:moon" class="text-base dark-hidden"></iconify-icon>
+      <iconify-icon icon="lucide:sun" class="text-base light-hidden text-amber-300"></iconify-icon>
+    </button>
+
+    <!-- 4. Notifications Bell with Red Badge matching Image 1 -->
+    <div class="relative" id="admin-notif-wrapper">
+      <button type="button"
+              id="admin-notif-btn"
+              onclick="toggleNotificationsDropdown('admin-notif-dropdown', event)"
+              title="Notifications"
+              class="topbar-control-btn relative w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer">
+        <iconify-icon icon="lucide:bell" class="text-base"></iconify-icon>
+        {% if notifTotal > 0 %}
+          <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center ring-2 ring-[#13224B]">
+            {{ notifTotal > 99 ? '99+' : notifTotal }}
+          </span>
+        {% endif %}
+      </button>
+
+      <!-- Notifications Dropdown Menu (Rich Navy matching Image 1) -->
+      <div id="admin-notif-dropdown"
+           class="topbar-dropdown hidden absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-[#13224B] border border-white/15 shadow-2xl py-3 text-xs text-white z-50 animate-fade-in">
+        <div class="px-4 pb-2.5 mb-1 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm text-white">Notifications</span>
+            {% if notifTotal > 0 %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500 text-white leading-none">
+                {{ notifTotal }} new
+              </span>
+            {% endif %}
+          </div>
+          <span class="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Live Studio Feeds</span>
+        </div>
+
+        <div class="max-h-80 overflow-y-auto divide-y divide-white/5">
+          <!-- Notification 1 -->
+          <a href="{{ path('admin_inquiries') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+              <iconify-icon icon="lucide:inbox"></iconify-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-white truncate">New Lead: Ana Reyes</span>
+                <span class="text-[10px] text-white/50 whitespace-nowrap">Oct 2</span>
+              </div>
+              <p class="text-[11px] text-amber-200/80 truncate">Cebu Tourism Board &bull; Web Design &bull; $45,000</p>
+            </div>
+          </a>
+
+          <!-- Notification 2 -->
+          <a href="{{ path('admin_payments') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+              <iconify-icon icon="lucide:receipt"></iconify-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-white truncate">Payment: $25,000.00</span>
+                <span class="text-[10px] text-white/50 whitespace-nowrap">Today</span>
+              </div>
+              <p class="text-[11px] text-emerald-200/80 truncate">Pesolink Banking Redesign (Wire Transfer)</p>
+            </div>
+          </a>
+
+          <!-- Notification 3 -->
+          <a href="{{ path('admin_projects') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+            <div class="w-8 h-8 rounded-full bg-blue-500/20 text-[#DDEBFF] border border-blue-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+              <iconify-icon icon="lucide:message-square"></iconify-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-white truncate">Message: Maria Santos</span>
+                <span class="text-[10px] text-white/50 whitespace-nowrap">Yesterday</span>
+              </div>
+              <p class="text-[11px] text-white/70 line-clamp-1 mt-0.5">"Can we tweak the color of the primary CTA button?"</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="pt-2 px-4 border-t border-white/10 mt-1 flex items-center justify-between text-[11px]">
+          <a href="{{ path('admin_inquiries') }}" class="text-[#DDEBFF] hover:underline font-semibold">View Inquiries &rarr;</a>
+          <a href="{{ path('admin_payments') }}" class="text-[#DDEBFF] hover:underline font-semibold">View Payments &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Admin User Avatar & Dropdown Menu matching Image 1 -->
+    <div class="relative" id="admin-user-wrapper">
+      <button type="button"
+              id="admin-user-btn"
+              onclick="toggleUserDropdown('admin-user-dropdown', event)"
+              class="flex items-center gap-2.5 p-1 rounded-full hover:bg-white/10 border border-transparent hover:border-white/15 transition-all text-left cursor-pointer">
+        <div class="relative">
+          <img src="{{ asset('images/profile.png') }}"
+               alt="Kimberly Jayne Antigo"
+               class="w-8 h-8 rounded-full object-cover border border-white/25 shadow-sm"
+               onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+          <div class="hidden w-8 h-8 rounded-full bg-[#4C6CCB] text-white font-bold text-xs items-center justify-center">KJ</div>
+          <span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#13224B]"></span>
+        </div>
+        <div class="hidden md:flex flex-col text-left leading-tight pr-1">
+          <span class="text-xs font-bold text-white">Kimberly Jayne Antigo</span>
+          <span class="text-[9px] text-[#DDEBFF]/70 font-medium">Studio Admin</span>
+        </div>
+        <iconify-icon icon="lucide:chevron-down" class="text-xs text-white/70 hidden sm:block"></iconify-icon>
+      </button>
+
+      <!-- Admin User Dropdown (Rich Navy matching Image 1) -->
+      <div id="admin-user-dropdown"
+           class="topbar-dropdown hidden absolute right-0 mt-2.5 w-60 rounded-2xl bg-[#13224B] border border-white/15 shadow-2xl py-2 text-xs text-white z-50 animate-fade-in">
+        <div class="px-4 py-2.5 border-b border-white/10">
+          <p class="font-bold text-white truncate">Kimberly Jayne Antigo</p>
+          <p class="text-[11px] text-[#DDEBFF]/80 truncate mt-0.5">admin@antigo.com</p>
+        </div>
+        <div class="py-1">
+          <a href="{{ path('admin_overview') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:settings" class="text-sm text-[#4C6CCB]"></iconify-icon>
+            <span>Studio Settings &amp; Profile</span>
+          </a>
+          <a href="{{ path('admin_projects') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:folder-kanban" class="text-sm text-[#6C5BB5]"></iconify-icon>
+            <span>Manage Projects</span>
+          </a>
+          <a href="{{ path('client_dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-white/10 text-white/90 hover:text-white transition-colors">
+            <iconify-icon icon="lucide:external-link" class="text-sm text-emerald-400"></iconify-icon>
+            <span>Switch to Client Portal</span>
+          </a>
+        </div>
+        <div class="border-t border-white/10 pt-1 mt-1">
+          <a href="#" onclick="alert('Session sign-out placeholder — authentication will be integrated in Phase 2'); return false;"
+             class="flex items-center gap-2.5 px-4 py-2 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 transition-colors">
+            <iconify-icon icon="lucide:log-out" class="text-sm"></iconify-icon>
+            <span>Sign Out</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- ================= QUICK ADD PROJECT MODAL ================= -->
+<div id="admin-quick-add-modal"
+     class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+     onclick="closeAdminQuickAddModal()">
+  <div class="bg-white dark:bg-[#121B42] text-[#13224B] dark:text-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[rgba(19,34,75,0.1)] dark:border-white/15 relative max-h-[90vh] overflow-y-auto"
+       onclick="event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-[#DDEBFF] dark:bg-white/10 text-[#4C6CCB] dark:text-[#DDEBFF] flex items-center justify-center text-lg">
+          <iconify-icon icon="lucide:plus-circle"></iconify-icon>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-[#13224B] dark:text-white">Quick Add Project</h3>
+          <p class="text-xs text-[#8890AA]">Create an active project without an inquiry</p>
+        </div>
+      </div>
+      <button type="button"
+              onclick="closeAdminQuickAddModal()"
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-500 dark:text-white/70 flex items-center justify-center transition-colors">
+        <iconify-icon icon="lucide:x" class="text-base"></iconify-icon>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form onsubmit="alert('Project created successfully! (Mocked submission)'); closeAdminQuickAddModal(); return false;" class="mt-5 space-y-4">
+      <!-- Client Selector -->
+      <div>
+        <label class="block text-xs font-bold text-[#13224B] dark:text-white mb-1.5">Client</label>
+        <select class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-[#0E1638] text-xs font-medium text-[#13224B] dark:text-white focus:border-[#4C6CCB] outline-none">
+          <option value="1">Maria Santos &bull; Pesolink (maria@pesolink.ph)</option>
+          <option value="2">Ana Reyes &bull; Cebu Tourism Board (ana@cebutourism.ph)</option>
+          <option value="3">Carlos Gomez &bull; Fintech Vanguard (carlos@fintechvanguard.com)</option>
+        </select>
+      </div>
+
+      <!-- Project Title -->
+      <div>
+        <label class="block text-xs font-bold text-[#13224B] dark:text-white mb-1">Project Title <span class="text-rose-500">*</span></label>
+        <input type="text"
+               required
+               placeholder="e.g. Fintech Mobile App Redesign"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-[#0E1638] text-xs font-medium text-[#13224B] dark:text-white focus:border-[#4C6CCB] outline-none">
+      </div>
+
+      <!-- Category & Budget -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-[#13224B] dark:text-white mb-1">Category</label>
+          <select class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-[#0E1638] text-xs font-medium text-[#13224B] dark:text-white focus:border-[#4C6CCB] outline-none">
+            <option>UI/UX Design</option>
+            <option>Web Design &amp; Dev</option>
+            <option>Design System Architecture</option>
+            <option>SaaS Product Strategy</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#13224B] dark:text-white mb-1">Budget ($ USD)</label>
+          <input type="text"
+                 value="$10,000"
+                 class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-[#0E1638] text-xs font-medium text-[#13224B] dark:text-white focus:border-[#4C6CCB] outline-none">
+        </div>
+      </div>
+
+      <!-- Target Due Date -->
+      <div>
+        <label class="block text-xs font-bold text-[#13224B] dark:text-white mb-1">Target Due Date</label>
+        <input type="date"
+               value="2026-11-15"
+               class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-[#0E1638] text-xs font-medium text-[#13224B] dark:text-white focus:border-[#4C6CCB] outline-none">
+      </div>
+
+      <!-- Submit Button -->
+      <div class="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-2.5">
+        <button type="button"
+                onclick="closeAdminQuickAddModal()"
+                class="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 text-gray-700 dark:text-white text-xs font-bold transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button type="submit"
+                data-phase2="quick_add_project"
+                data-phase2-label="Quick Add Project"
+                onclick="closeAdminQuickAddModal()"
+                class="px-5 py-2.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+          <iconify-icon icon="lucide:check" class="text-sm"></iconify-icon>
+          <span>Create Project</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

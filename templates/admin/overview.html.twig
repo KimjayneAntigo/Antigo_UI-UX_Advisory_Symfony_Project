@@ -1,0 +1,209 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Overview — Studio Command Center | Antigo{% endblock %}
+
+{% block content %}
+<!-- Studio Command Center Hero Banner -->
+<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#13224B] via-[#1b2f66] to-[#253e86] p-6 sm:p-8 text-white shadow-xl border border-white/10">
+  <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="max-w-2xl space-y-2.5">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-wider text-[#DDEBFF]">
+        <iconify-icon icon="lucide:shield-check" class="text-xs text-emerald-400"></iconify-icon>
+        <span>Studio Command Center</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+        Welcome back, Kimberly!
+      </h1>
+      <p class="text-xs sm:text-sm text-[#A5B3D8] leading-relaxed">
+        Track live client lead qualification, monitor active design delivery sprints, and oversee scheduled advisory sessions.
+      </p>
+    </div>
+
+    <!-- Hero Actions -->
+    <div class="flex items-center gap-3 flex-wrap flex-shrink-0">
+      <a href="{{ path('admin_inquiries') }}" 
+         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-gray-50 text-[#13224B] text-xs font-bold shadow-md transition-all">
+        <iconify-icon icon="lucide:inbox" class="text-sm text-[#4C6CCB]"></iconify-icon>
+        <span>Review Leads ({{ inquiriesPendingCount|default(1) }} new)</span>
+      </a>
+      <a href="{{ path('admin_bookings') }}" 
+         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all backdrop-blur-sm">
+        <iconify-icon icon="lucide:calendar" class="text-sm"></iconify-icon>
+        <span>Calendar</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 4 Key Stat Metric Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+  
+  <!-- 1. Active Pipeline Value -->
+  <div class="bg-white rounded-3xl p-5 sm:p-6 border border-[rgba(19,34,75,0.08)] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+    <div class="flex items-center justify-between pb-3">
+      <span class="text-[11px] font-bold uppercase tracking-wider text-[#8890AA]">Active Pipeline Value</span>
+      <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center text-sm">
+        <iconify-icon icon="lucide:dollar-sign"></iconify-icon>
+      </div>
+    </div>
+    <div>
+      <div class="text-2xl sm:text-3xl font-extrabold text-[#13224B] tracking-tight">
+        {{ activePipelineValue|default('$620,000') }}
+      </div>
+      <p class="text-[11px] text-emerald-600 font-semibold mt-1">
+        Total active studio budget ($ USD)
+      </p>
+    </div>
+  </div>
+
+  <!-- 2. Active Projects -->
+  <div class="bg-white rounded-3xl p-5 sm:p-6 border border-[rgba(19,34,75,0.08)] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+    <div class="flex items-center justify-between pb-3">
+      <span class="text-[11px] font-bold uppercase tracking-wider text-[#8890AA]">Active Projects</span>
+      <div class="w-8 h-8 rounded-full bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400 flex items-center justify-center text-sm">
+        <iconify-icon icon="lucide:bar-chart-3"></iconify-icon>
+      </div>
+    </div>
+    <div>
+      <div class="text-2xl sm:text-3xl font-extrabold text-[#13224B] tracking-tight">
+        {{ activeProjectsCount|default(1) }}
+      </div>
+      <a href="{{ path('admin_projects') }}" class="text-[11px] text-[#4C6CCB] font-semibold hover:underline inline-flex items-center gap-1 mt-1">
+        Manage sprints &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- 3. Inquiries Queue -->
+  <div class="bg-white rounded-3xl p-5 sm:p-6 border border-[rgba(19,34,75,0.08)] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+    <div class="flex items-center justify-between pb-3">
+      <span class="text-[11px] font-bold uppercase tracking-wider text-[#8890AA]">Inquiries Queue</span>
+      <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center text-sm">
+        <iconify-icon icon="lucide:inbox"></iconify-icon>
+      </div>
+    </div>
+    <div>
+      <div class="text-2xl sm:text-3xl font-extrabold text-[#13224B] tracking-tight">
+        {{ inquiriesPendingCount|default(1) }}
+      </div>
+      <a href="{{ path('admin_inquiries') }}" class="text-[11px] text-[#4C6CCB] font-semibold hover:underline inline-flex items-center gap-1 mt-1">
+        Review leads pipeline &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- 4. Scheduled Sessions -->
+  <div class="bg-white rounded-3xl p-5 sm:p-6 border border-[rgba(19,34,75,0.08)] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+    <div class="flex items-center justify-between pb-3">
+      <span class="text-[11px] font-bold uppercase tracking-wider text-[#8890AA]">Scheduled Sessions</span>
+      <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 flex items-center justify-center text-sm">
+        <iconify-icon icon="lucide:calendar"></iconify-icon>
+      </div>
+    </div>
+    <div>
+      <div class="text-2xl sm:text-3xl font-extrabold text-[#13224B] tracking-tight">
+        {{ scheduledSessionsCount|default(2) }}
+      </div>
+      <a href="{{ path('admin_bookings') }}" class="text-[11px] text-amber-600 font-semibold hover:underline inline-flex items-center gap-1 mt-1">
+        Upcoming consultations &rarr;
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Main Split: Active Sprints & Upcoming Agenda -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Left: Active Project Sprints (Col 1-2) -->
+  <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] shadow-sm space-y-6">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div>
+        <h2 class="text-lg font-bold text-[#13224B]">Active Project Sprints</h2>
+        <p class="text-xs text-[#8890AA]">Live status and milestone progress for currently ongoing studio projects.</p>
+      </div>
+      <a href="{{ path('admin_projects') }}" class="text-xs font-semibold text-[#4C6CCB] hover:text-[#6C5BB5] transition-colors">
+        View All Projects &rarr;
+      </a>
+    </div>
+
+    <!-- Sprints List -->
+    <div class="space-y-4">
+      {% for sprint in activeSprints %}
+        <div class="p-5 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.05)] hover:border-[#4C6CCB]/30 transition-all space-y-3.5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <span class="inline-block text-[10px] font-mono font-bold text-[#8890AA] uppercase tracking-wider">
+                {{ sprint.code }}
+              </span>
+              <h3 class="text-sm font-bold text-[#13224B] leading-tight mt-0.5">
+                <a href="{{ path('admin_project_detail', {id: sprint.id|default(loop.index)}) }}" class="hover:text-[#4C6CCB] transition-colors">
+                  {{ sprint.title }}
+                </a>
+              </h3>
+              <p class="text-xs text-[#4C6CCB] font-medium mt-0.5">
+                {{ sprint.client }}
+              </p>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold whitespace-nowrap {{ sprint.status_badge == 'Design' ? 'bg-[#DDEBFF] text-[#13224B] badge-design' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' }}">
+              {{ sprint.status_badge|default(sprint.phase) }}
+            </span>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-[11px] text-[#8890AA]">
+              <span>{{ sprint.phase }}</span>
+              <span class="font-bold text-[#13224B]">{{ sprint.progress }}%</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-[#4C6CCB] to-[#6C5BB5] transition-all duration-500"
+                   style="width: {{ sprint.progress }}%;"></div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Right: Upcoming Agenda (Col 3) -->
+  <div class="bg-white rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] shadow-sm space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <iconify-icon icon="lucide:calendar-clock" class="text-lg text-amber-500"></iconify-icon>
+        <h2 class="text-lg font-bold text-[#13224B]">Upcoming Agenda</h2>
+      </div>
+      <a href="{{ path('admin_bookings') }}" class="text-xs font-semibold text-[#4C6CCB] hover:text-[#6C5BB5] transition-colors">
+        View All &rarr;
+      </a>
+    </div>
+
+    <!-- Agenda Items List -->
+    <div class="space-y-3.5">
+      {% for session in upcomingAgenda %}
+        <div class="p-4 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.05)] hover:border-[#4C6CCB]/30 transition-all space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h4 class="text-xs font-bold text-[#13224B]">{{ session.client }}</h4>
+              <p class="text-[11px] text-[#8890AA]">{{ session.service }} &bull; {{ session.date }}</p>
+            </div>
+            <span class="text-[11px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-lg whitespace-nowrap">
+              {{ session.time }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-white/5 text-[11px]">
+            <span class="text-[#8890AA] flex items-center gap-1">
+              <iconify-icon icon="lucide:video" class="text-xs"></iconify-icon>
+              {{ session.format }}
+            </span>
+            <a href="{{ path('admin_bookings') }}" class="text-[#4C6CCB] hover:underline font-semibold">
+              Details &rarr;
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

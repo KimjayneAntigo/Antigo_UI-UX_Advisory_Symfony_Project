@@ -1,0 +1,109 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Inquiries — Studio Leads Pipeline | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header & Stats Summary -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Inquiry Leads Pipeline</h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Qualify incoming leads, track client status, and convert inquiries to active projects.</p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <span class="px-3 py-1.5 rounded-xl bg-white border border-[rgba(19,34,75,0.08)] text-xs font-bold text-[#13224B] shadow-sm">
+        Pending Review: <span class="text-[#6C5BB5]">{{ inquiriesPendingCount|default(1) }}</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="flex items-center gap-2 flex-wrap">
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
+      All ({{ stats.total|default(4) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
+      New ({{ stats.new|default(1) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
+      Reviewed ({{ stats.reviewed|default(1) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
+      Contacted ({{ stats.contacted|default(1) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
+      Converted ({{ stats.converted|default(1) }})
+    </button>
+  </div>
+
+  <!-- Leads Table Card -->
+  <div class="bg-white rounded-3xl border border-[rgba(19,34,75,0.08)] shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] text-[#8890AA] uppercase tracking-wider font-bold">
+          <tr>
+            <th class="py-4 px-6">Lead / Reference</th>
+            <th class="py-4 px-6">Company &amp; Contact</th>
+            <th class="py-4 px-6">Requested Service</th>
+            <th class="py-4 px-6">Budget ($ USD)</th>
+            <th class="py-4 px-6">Status</th>
+            <th class="py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[rgba(19,34,75,0.05)]">
+          {% for lead in inquiries %}
+            <tr class="hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors">
+              <td class="py-4 px-6">
+                <span class="font-mono text-[10px] font-bold text-[#8890AA] block">{{ lead.ref_code }}</span>
+                <span class="font-bold text-[#13224B] text-sm">{{ lead.name }}</span>
+                <span class="text-[11px] text-[#8890AA] block mt-0.5">{{ lead.created_at }}</span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="font-semibold text-[#13224B] block">{{ lead.company }}</span>
+                <span class="text-[11px] text-[#4C6CCB] font-mono">{{ lead.email }}</span>
+              </td>
+              <td class="py-4 px-6 font-medium text-[#13224B]">
+                {{ lead.service }}
+                <p class="text-[11px] text-[#8890AA] line-clamp-1 mt-0.5">{{ lead.message }}</p>
+              </td>
+              <td class="py-4 px-6 font-mono font-bold text-[#13224B]">
+                {{ lead.budget }}
+              </td>
+              <td class="py-4 px-6">
+                {% if lead.status == 'new' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] badge-new whitespace-nowrap">New Lead</span>
+                {% elseif lead.status == 'reviewed' %}
+                  <span class="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[rgba(108,91,181,0.14)] text-[#6C5BB5]">Reviewed</span>
+                {% elseif lead.status == 'contacted' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DDEBFF] text-[#13224B] badge-contacted whitespace-nowrap">Contacted</span>
+                {% elseif lead.status == 'converted' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] badge-converted whitespace-nowrap">Converted</span>
+                {% else %}
+                  <span class="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-600">{{ lead.status|capitalize }}</span>
+                {% endif %}
+              </td>
+              <td class="py-4 px-6 text-right space-x-2">
+                <button type="button" 
+                        onclick="alert('Inquiry lead {{ lead.ref_code }} details')" 
+                        class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-xs font-semibold text-[#13224B] transition-colors">
+                  View
+                </button>
+                {% if lead.status != 'converted' %}
+                  <button type="button" 
+                          onclick="alert('Convert {{ lead.ref_code }} to Project')" 
+                          class="px-3 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-sm transition-all">
+                    Convert
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

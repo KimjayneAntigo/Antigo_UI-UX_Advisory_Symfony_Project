@@ -1,0 +1,639 @@
+{% extends 'client/base.html.twig' %}
+
+{% block title %}{{ project.title }} &mdash; Project Workspace{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- ================= 0. NOTICES & ALERTS ================= -->
+
+  <!-- Invoice Ready Banner (State 3: Invoice Sent) -->
+  {% if project.paymentState == 'invoice_sent' and not project.is_cancelled %}
+    <div class="p-4 sm:p-5 rounded-3xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-200">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl flex-shrink-0">
+          <iconify-icon icon="lucide:receipt"></iconify-icon>
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-blue-950 dark:text-blue-100">Milestone Invoice Ready for Payment</h2>
+          <p class="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
+            The studio has issued your final deliverable milestone invoice for {{ project.budget }} USD. Review invoice details below.
+          </p>
+        </div>
+      </div>
+      <a href="#paymentCardSection" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 self-end sm:self-center flex-shrink-0 cursor-pointer">
+        <span>Review Invoice</span>
+        <iconify-icon icon="lucide:arrow-down" class="text-xs"></iconify-icon>
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Cancelled Banner (Project 3) -->
+  {% if project.is_cancelled %}
+    <div class="p-4 sm:p-5 rounded-3xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200 flex items-start gap-3.5 shadow-sm animate-in fade-in duration-200">
+      <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 text-2xl">
+        <iconify-icon icon="lucide:alert-octagon"></iconify-icon>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h2 class="text-sm sm:text-base font-extrabold text-rose-950 dark:text-rose-100">
+            Cancelled on {{ project.cancelled_date_formatted|default('Aug 14, 2026') }} by {{ project.cancelled_by|default('Kimberly Jayne Antigo') }}
+          </h2>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-200/80 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200">
+            Sprint Terminated
+          </span>
+        </div>
+        <p class="text-xs text-rose-800 dark:text-rose-300 mt-1 leading-relaxed">
+          <span class="font-bold">Reason:</span> {{ project.cancellation_reason|default('Client requested project freeze due to internal corporate restructuring.') }}
+        </p>
+        <p class="text-[11px] text-rose-700/80 dark:text-rose-400/80 mt-1">
+          All modifications, uploads, and communication channels are locked in audit mode. Historical sprint files and messages are preserved below.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ================= 1. HEADER BAR ================= -->
+  <div class="w-full -mt-2 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[#182859] dark:bg-[#0E1638] text-white border-b border-white/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
+    
+    <!-- Left: Breadcrumb & Title Context -->
+    <div class="flex items-center gap-3.5 min-w-0">
+      <a href="{{ path('client_projects') }}"
+         class="flex-shrink-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer"
+         title="Back to My Projects">
+        <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+      </a>
+
+      <div class="min-w-0">
+        <!-- Breadcrumb: Dashboard > Projects > Title -->
+        <nav class="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-[#DDEBFF]/70">
+          <a href="{{ path('client_dashboard') }}" class="hover:underline">Dashboard</a>
+          <iconify-icon icon="lucide:chevron-right" class="text-[10px]"></iconify-icon>
+          <a href="{{ path('client_projects') }}" class="hover:underline">Projects</a>
+          <iconify-icon icon="lucide:chevron-right" class="text-[10px]"></iconify-icon>
+          <span class="text-white truncate">{{ project.title }}</span>
+        </nav>
+
+        <div class="flex items-center gap-2.5 mt-0.5 flex-wrap">
+          <h1 class="text-base sm:text-lg font-extrabold text-white truncate max-w-sm sm:max-w-md">
+            {{ project.title }}
+          </h1>
+
+          <!-- Code Badge -->
+          <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-[#4C6CCB]/30 border border-[#4C6CCB]/40 text-[10px] font-extrabold text-[#DDEBFF] tracking-widest font-mono">
+            {{ project.code }}
+          </span>
+
+          <!-- Status Badge -->
+          {% if project.is_cancelled %}
+            <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-rose-500/25 border border-rose-400/40 text-[10px] font-extrabold text-rose-200 uppercase tracking-wider">
+              Cancelled
+            </span>
+          {% elseif project.status_type == 'completed' %}
+            <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider">
+              Delivered
+            </span>
+          {% else %}
+            <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-blue-500/25 border border-blue-400/40 text-[10px] font-extrabold text-[#DDEBFF] uppercase tracking-wider">
+              In Progress
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Cancel Project Button (Hidden once completed or cancelled) -->
+    <div class="flex items-center gap-3 flex-shrink-0">
+      {% if project.status_type != 'completed' and not project.is_cancelled %}
+        <button type="button"
+                onclick="openClientCancelModal()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 text-xs font-bold transition-all cursor-pointer">
+          <iconify-icon icon="lucide:ban" class="text-base"></iconify-icon>
+          <span>Cancel Project</span>
+        </button>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ================= 2. MILESTONE PROGRESSION (READ-ONLY) ================= -->
+  <div class="dashboard-card p-6 sm:p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-[#6C5BB5] dark:text-[#DDEBFF]">Milestone Progression</span>
+        <h2 class="text-xl font-extrabold text-[#13224B] dark:text-white mt-0.5">Project Phase &amp; Delivery Status</h2>
+        <p class="text-xs text-[#8890AA] mt-0.5">
+          Read-only milestone tracker synchronized live with the design studio.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <span class="px-3.5 py-1.5 rounded-xl bg-[#DDEBFF] dark:bg-white/10 text-[#13224B] dark:text-white text-xs font-extrabold">
+          {{ project.progress }}% Complete
+        </span>
+      </div>
+    </div>
+
+    <!-- Expected Delivery Meta -->
+    <div class="flex items-center justify-between text-xs text-[#8890AA] pt-1">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-[#13224B] dark:text-white">Active Stage:</span>
+        <span class="text-[#6C5BB5] dark:text-[#DDEBFF] font-semibold">{{ project.phase_name }}</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs">
+        <iconify-icon icon="lucide:calendar" class="text-[#4C6CCB]"></iconify-icon>
+        <span>Expected Delivery: <strong class="text-[#13224B] dark:text-white">{{ project.expected_delivery }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Reusable 5-Phase Stepper with Phase 5 Green Checkmark -->
+    {% include '_partials/project-stepper.html.twig' with {
+      currentPhase: project.current_phase,
+      progressPercent: project.progress,
+      phaseName: project.phase_name,
+      showHeader: true
+    } %}
+  </div>
+
+  <!-- ================= MAIN TWO-COLUMN CONTENT GRID ================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- LEFT COLUMN (Col 1-2): Deliverables & Messages -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- ================= 3. DELIVERABLES & DESIGN ASSETS ================= -->
+      <div class="dashboard-card p-6 sm:p-7 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-extrabold text-[#13224B] dark:text-white">Deliverables &amp; Design Assets</h2>
+            <p class="text-xs text-[#8890AA] mt-0.5">
+              {{ project.files|length }} assets available for review and download
+            </p>
+          </div>
+          <div class="w-9 h-9 rounded-xl bg-[#DDEBFF] dark:bg-white/10 text-[#4C6CCB] dark:text-[#DDEBFF] flex items-center justify-center">
+            <iconify-icon icon="lucide:folder-down" class="text-base"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Files List or Empty State -->
+        {% if project.files is empty %}
+          <!-- Empty State (Project 2) -->
+          <div class="p-8 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-dashed border-[rgba(19,34,75,0.15)] dark:border-white/10 text-center space-y-2">
+            <div class="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-white/10 text-[#8890AA] mx-auto flex items-center justify-center text-2xl">
+              <iconify-icon icon="lucide:folder-open"></iconify-icon>
+            </div>
+            <h3 class="text-xs sm:text-sm font-bold text-[#13224B] dark:text-white">No deliverables uploaded yet.</h3>
+            <p class="text-[11px] text-[#8890AA] max-w-sm mx-auto">
+              Your design deliverables and sprint assets will appear here as each milestone is completed.
+            </p>
+          </div>
+        {% else %}
+          <div class="space-y-3">
+            {% for file in project.files %}
+              <div class="p-4 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.06)] dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:border-[#4C6CCB]/30 transition-all">
+                
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-white dark:bg-white/10 border border-[rgba(19,34,75,0.08)] dark:border-white/10 text-[#4C6CCB] flex items-center justify-center text-xl flex-shrink-0">
+                    <iconify-icon icon="{{ file.icon|default('lucide:file-text') }}"></iconify-icon>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h3 class="text-xs sm:text-sm font-bold text-[#13224B] dark:text-white truncate">
+                        {{ file.name }}
+                      </h3>
+                      {% if file.removed_notice %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60">
+                          <iconify-icon icon="lucide:eye-off" class="text-xs"></iconify-icon>
+                          <span>{{ file.removed_notice }}</span>
+                        </span>
+                      {% endif %}
+                    </div>
+                    <p class="text-[11px] text-[#8890AA] mt-0.5">
+                      {{ file.size }} &bull; Uploaded {{ file.time_ago }} &bull; by {{ file.uploaded_by }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Download & Remove Actions -->
+                <div class="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+                  <!-- Download Action (data-phase2) -->
+                  <button type="button"
+                          data-phase2="download_file"
+                          data-phase2-label="Download {{ file.name }}"
+                          class="px-3.5 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <iconify-icon icon="lucide:download" class="text-xs"></iconify-icon>
+                    <span>Download</span>
+                  </button>
+
+                  <!-- Remove from View Action (data-phase2, hidden in cancelled state) -->
+                  {% if not project.is_cancelled %}
+                    <button type="button"
+                            onclick="openRemoveFileModal('{{ file.name }}')"
+                            class="p-2 rounded-xl bg-white dark:bg-white/10 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#8890AA] hover:text-rose-600 transition-all cursor-pointer"
+                            title="Remove from your view">
+                      <iconify-icon icon="lucide:trash-2" class="text-sm"></iconify-icon>
+                    </button>
+                  {% endif %}
+                </div>
+
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ================= 4. MESSAGES PANEL ================= -->
+      <div class="dashboard-card p-6 sm:p-7 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-extrabold text-[#13224B] dark:text-white">Studio Communications</h2>
+            <p class="text-xs text-[#8890AA] mt-0.5">
+              Direct thread with <strong>Kimberly Jayne Antigo</strong>
+            </p>
+          </div>
+          <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Advisor Online</span>
+          </span>
+        </div>
+
+        <!-- Chat Conversation Feed: Client messages are right-aligned with gradient -->
+        <div class="space-y-4 max-h-[360px] overflow-y-auto p-1 pr-2">
+          {% for msg in project.messages %}
+            {% if msg.role == 'client' %}
+              <!-- Client's Own Message (Right-aligned with Gradient) -->
+              <div class="flex justify-end">
+                <div class="max-w-md space-y-1">
+                  <div class="p-4 rounded-3xl rounded-br-sm text-white text-xs leading-relaxed shadow-sm"
+                       style="background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);">
+                    {{ msg.message }}
+                  </div>
+                  <div class="text-[10px] text-[#8890AA] text-right font-medium">
+                    You &bull; {{ msg.time|raw }}
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <!-- Admin / Advisor Message (Left-aligned Light Gray) -->
+              <div class="flex justify-start">
+                <div class="max-w-md space-y-1">
+                  <div class="p-4 rounded-3xl rounded-bl-sm bg-[#F4F6F8] dark:bg-white/10 text-[#13224B] dark:text-white text-xs leading-relaxed border border-[rgba(19,34,75,0.06)] dark:border-white/10 shadow-sm">
+                    {{ msg.message }}
+                  </div>
+                  <div class="text-[10px] text-[#8890AA] font-medium">
+                    Kimberly Jayne Antigo (Advisor) &bull; {{ msg.time|raw }}
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <!-- Reply Input Bar (locked if cancelled) -->
+        <div class="pt-2 border-t border-[rgba(19,34,75,0.08)] dark:border-white/10">
+          {% if project.is_cancelled %}
+            <div class="p-3.5 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-[#8890AA] text-center font-medium">
+              <iconify-icon icon="lucide:lock" class="inline-block mr-1"></iconify-icon>
+              Messaging locked for cancelled project.
+            </div>
+          {% else %}
+            <div class="flex items-center gap-2">
+              <input type="text"
+                     id="clientReplyInput"
+                     placeholder="Type a message or sprint feedback to Kimberly..."
+                     class="flex-1 px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]">
+              <button type="button"
+                      data-phase2="send_message"
+                      data-phase2-label="Send Message to Studio"
+                      class="px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow hover:opacity-90 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+                      style="background: linear-gradient(135deg, #13224B, #4C6CCB);">
+                <span>Send</span>
+                <iconify-icon icon="lucide:send" class="text-sm"></iconify-icon>
+              </button>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN (Col 3): Project Overview, Your Designer, Payment Card -->
+    <div class="space-y-6">
+
+      <!-- ================= 5. PROJECT OVERVIEW CARD ================= -->
+      <div class="dashboard-card p-6 space-y-4">
+        <h3 class="text-sm font-extrabold text-[#13224B] dark:text-white uppercase tracking-wider">
+          Project Overview
+        </h3>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Service</span>
+            <span class="font-bold text-[#13224B] dark:text-white text-right">{{ project.service }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Start Date</span>
+            <span class="font-bold text-[#13224B] dark:text-white">{{ project.start_date }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Expected Delivery</span>
+            <span class="font-bold text-[#13224B] dark:text-white">{{ project.expected_delivery }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Status</span>
+            <span class="font-bold text-[#13224B] dark:text-white">{{ project.status }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-[#8890AA]">Contract Total</span>
+            <span class="text-base font-extrabold text-[#4C6CCB] dark:text-[#DDEBFF]">{{ project.budget }} USD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 6. YOUR DESIGNER CARD ================= -->
+      <div class="dashboard-card p-6 space-y-4">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[#6C5BB5] dark:text-[#DDEBFF]">Your Designer</span>
+        
+        <div class="flex items-center gap-3.5">
+          <div class="relative">
+            <img src="{{ asset('images/profile.png') }}"
+                 alt="Kimberly Jayne Antigo"
+                 class="w-12 h-12 rounded-full object-cover border-2 border-[#4C6CCB] shadow-sm"
+                 onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+            <div class="hidden w-12 h-12 rounded-full bg-[#13224B] text-white font-bold text-sm items-center justify-center">KJA</div>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#121B42]"></span>
+          </div>
+          <div>
+            <h4 class="text-sm font-extrabold text-[#13224B] dark:text-white">Kimberly Jayne Antigo</h4>
+            <p class="text-[11px] text-[#8890AA]">Founder &amp; UI/UX Consultant</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-[#4b4b4b] dark:text-white/80 leading-relaxed">
+          Leading your design architecture sprint, reviewing wireframes, and ensuring pixel-perfect component execution.
+        </p>
+
+        <a href="{{ path('client_messages') }}" class="w-full py-2.5 rounded-xl bg-[#DDEBFF] dark:bg-white/10 hover:bg-[#c9e1ff] text-[#4C6CCB] dark:text-[#DDEBFF] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+          <iconify-icon icon="lucide:message-square" class="text-sm"></iconify-icon>
+          <span>Open Direct Chat</span>
+        </a>
+      </div>
+
+      <!-- ================= 7. PAYMENT CARD (FOUR VISUAL STATES) ================= -->
+      {# State 1: Not available (project not complete) -> Hidden entirely #}
+      {% if not project.is_cancelled %}
+        <div id="paymentCardSection">
+          {% if project.current_phase < 5 or project.paymentState == 'not_available' %}
+            {# State 1: Hidden entirely, render nothing #}
+
+          {% elseif project.paymentState == 'complete_no_invoice' or (project.current_phase == 5 and not project.invoice_sent_at and project.paymentState != 'invoice_sent' and project.paymentState != 'pending' and project.paymentState != 'paid' and project.paymentState != 'rejected') %}
+            <!-- State 2: Complete, invoice not sent yet -->
+            <div class="dashboard-card p-6 border border-dashed border-[rgba(19,34,75,0.15)] dark:border-white/10 text-center space-y-2">
+              <div class="w-10 h-10 rounded-2xl bg-gray-100 dark:bg-white/5 text-[#8890AA] mx-auto flex items-center justify-center text-lg">
+                <iconify-icon icon="lucide:clock"></iconify-icon>
+              </div>
+              <p class="text-xs font-semibold text-[#8890AA] dark:text-gray-400">
+                Your project is complete &mdash; the studio will send your final invoice shortly.
+              </p>
+            </div>
+
+          {% elseif project.paymentState == 'invoice_sent' %}
+            <!-- State 3: Invoice sent, awaiting payment submission -->
+            <div class="dashboard-card p-6 space-y-4 border-l-4 border-[#4C6CCB]">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <iconify-icon icon="lucide:receipt" class="text-base text-[#4C6CCB]"></iconify-icon>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[#13224B] dark:text-white">Milestone Invoice</h3>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DDEBFF] text-[#13224B]">
+                  INVOICE ISSUED
+                </span>
+              </div>
+
+              <div>
+                <span class="text-[11px] text-[#8890AA] block">Amount Due</span>
+                <span class="text-2xl font-extrabold text-[#13224B] dark:text-white">{{ project.budget }} USD</span>
+              </div>
+
+              <!-- Payment Method Selector -->
+              <div class="space-y-1.5">
+                <label for="paymentMethodSelect" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]">
+                  Select Payment Method
+                </label>
+                <select id="paymentMethodSelect" 
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-bold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]">
+                  <option value="bank_transfer">Bank Transfer (USD Wire)</option>
+                  <option value="card">Credit / Debit Card</option>
+                  <option value="gcash">GCash</option>
+                  <option value="cash">Cash Settlement</option>
+                </select>
+              </div>
+
+              <!-- Submit Payment CTA (data-phase2) -->
+              <button type="button"
+                      data-phase2="submit_payment"
+                      data-phase2-label="Submit Invoice Payment"
+                      class="w-full py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider shadow hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      style="background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);">
+                <span>Submit Payment</span>
+                <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+              </button>
+            </div>
+
+          {% elseif project.paymentState in ['pending', 'paid', 'rejected'] %}
+            <!-- State 4: Pending / Paid / Rejected -->
+            <div class="dashboard-card p-6 space-y-4 border-l-4 
+              {% if project.paymentState == 'paid' %}border-emerald-500
+              {% elseif project.paymentState == 'rejected' %}border-rose-500
+              {% else %}border-amber-500{% endif %}">
+              
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <iconify-icon icon="lucide:receipt" class="text-base text-[#4C6CCB]"></iconify-icon>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[#13224B] dark:text-white">Payment Status</h3>
+                </div>
+                
+                <!-- Status Badge -->
+                {% if project.paymentState == 'paid' %}
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DFF6E8] text-[#127A45]">
+                    PAID &bull; VERIFIED
+                  </span>
+                {% elseif project.paymentState == 'rejected' %}
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-700">
+                    REJECTED
+                  </span>
+                {% else %}
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF1D6] text-[#946200]">
+                    PENDING VERIFICATION
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- Reference Number -->
+              <div>
+                <span class="text-[11px] text-[#8890AA] block">Payment Reference</span>
+                <span class="font-mono text-base font-extrabold text-[#13224B] dark:text-white">
+                  {{ project.payment_ref|default('PAY-00011') }}
+                </span>
+                <p class="text-xs text-[#8890AA] mt-0.5">Amount: <strong class="text-[#13224B] dark:text-white">{{ project.payment_amount|default(project.budget ~ '.00') }} USD</strong></p>
+              </div>
+
+              {% if project.paymentState == 'paid' %}
+                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-base text-emerald-600"></iconify-icon>
+                  <span>Payment received and verified by studio.</span>
+                </div>
+
+              {% elseif project.paymentState == 'rejected' %}
+                <!-- Rejected details + resubmit option -->
+                <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 text-xs space-y-1.5">
+                  <div class="font-bold flex items-center gap-1.5">
+                    <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+                    <span>Studio Review Note:</span>
+                  </div>
+                  <p class="text-[11px] leading-relaxed">
+                    Wire reference could not be matched with bank statements. Please verify your transaction receipt and resubmit.
+                  </p>
+                </div>
+                <button type="button"
+                        data-phase2="resubmit_payment"
+                        data-phase2-label="Resubmit Payment Reference"
+                        class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                  <iconify-icon icon="lucide:refresh-cw" class="text-sm"></iconify-icon>
+                  <span>Resubmit Payment Details</span>
+                </button>
+
+              {% else %}
+                <!-- Pending verification notice -->
+                <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2">
+                  <iconify-icon icon="lucide:clock-4" class="text-base text-amber-600 flex-shrink-0 mt-0.5"></iconify-icon>
+                  <p class="text-[11px] leading-relaxed">
+                    Payment reference submitted. The studio finance team will verify the bank wire within 24 business hours.
+                  </p>
+                </div>
+              {% endif %}
+
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= REMOVE FILE CONFIRMATION MODAL ================= -->
+<div id="removeFileModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#121A3A] w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 flex items-center justify-center text-xl flex-shrink-0">
+          <iconify-icon icon="lucide:file-x"></iconify-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-extrabold text-[#13224B] dark:text-white">Remove File from View</h3>
+          <p id="removeFileName" class="text-xs text-[#8890AA] mt-0.5 truncate max-w-xs">Selected file</p>
+        </div>
+      </div>
+      <button type="button" 
+              onclick="closeRemoveFileModal()" 
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 text-[#8890AA] hover:text-black dark:hover:text-white flex items-center justify-center transition-colors">
+        <iconify-icon icon="lucide:x" class="text-base"></iconify-icon>
+      </button>
+    </div>
+
+    <!-- Required confirmation text -->
+    <p class="text-xs text-[#4b4b4b] dark:text-gray-300 leading-relaxed">
+      Remove this file from your view? This doesn't affect the project record.
+    </p>
+
+    <div class="flex items-center justify-end gap-2.5 pt-2">
+      <button type="button" 
+              onclick="closeRemoveFileModal()"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold text-[#8890AA] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+        Keep in View
+      </button>
+      <button type="button"
+              data-phase2="confirm_remove_client_file"
+              data-phase2-label="Remove File from Client View"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow transition-all flex items-center gap-1.5 cursor-pointer">
+        <iconify-icon icon="lucide:eye-off" class="text-sm"></iconify-icon>
+        <span>Remove from View</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CANCEL PROJECT CONFIRMATION MODAL ================= -->
+<div id="clientCancelModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#121A3A] w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 flex items-center justify-center text-xl flex-shrink-0">
+          <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-extrabold text-[#13224B] dark:text-white">Cancel Project Sprint</h3>
+          <p class="text-xs text-[#8890AA] mt-0.5">{{ project.code }} &bull; {{ project.title }}</p>
+        </div>
+      </div>
+      <button type="button" 
+              onclick="closeClientCancelModal()" 
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 text-[#8890AA] hover:text-black dark:hover:text-white flex items-center justify-center transition-colors">
+        <iconify-icon icon="lucide:x" class="text-base"></iconify-icon>
+      </button>
+    </div>
+
+    <p class="text-xs text-[#4b4b4b] dark:text-gray-300 leading-relaxed">
+      Are you sure you want to request cancellation for sprint <strong class="text-[#13224B] dark:text-white">{{ project.code }}</strong>? The studio will be notified and sprint deliverables will be archived.
+    </p>
+
+    <div class="space-y-1.5">
+      <label for="clientCancelReason" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]">
+        Cancellation Reason (optional)
+      </label>
+      <textarea id="clientCancelReason" 
+                rows="3" 
+                placeholder="Let Kimberly know why you would like to pause or cancel this project..."
+                class="w-full p-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-rose-500"></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2.5 pt-2">
+      <button type="button" 
+              onclick="closeClientCancelModal()"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold text-[#8890AA] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+        Keep Active
+      </button>
+      <button type="button"
+              data-phase2="confirm_cancel_project"
+              data-phase2-label="Confirm Project Cancellation"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow transition-all flex items-center gap-1.5 cursor-pointer">
+        <iconify-icon icon="lucide:ban" class="text-sm"></iconify-icon>
+        <span>Confirm Cancellation</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openRemoveFileModal(fileName) {
+    document.getElementById('removeFileName').textContent = fileName;
+    document.getElementById('removeFileModal').classList.remove('hidden');
+  }
+
+  function closeRemoveFileModal() {
+    document.getElementById('removeFileModal').classList.add('hidden');
+  }
+
+  function openClientCancelModal() {
+    document.getElementById('clientCancelModal').classList.remove('hidden');
+  }
+
+  function closeClientCancelModal() {
+    document.getElementById('clientCancelModal').classList.add('hidden');
+  }
+</script>
+{% endblock %}

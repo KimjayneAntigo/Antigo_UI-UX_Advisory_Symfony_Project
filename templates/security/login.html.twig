@@ -1,0 +1,189 @@
+{% extends 'security/base_auth.html.twig' %}
+
+{% block title %}Sign In &mdash; Antigo UI/UX Advisory{% endblock %}
+
+{% block auth_content %}
+<div class="max-w-md w-full mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#13224B] dark:text-white tracking-tight">
+      Sign In
+    </h1>
+    <p class="text-xs sm:text-sm text-[#8890AA] dark:text-gray-400 mt-1.5">
+      Welcome back. Enter your credentials to access your dashboard.
+    </p>
+  </div>
+
+  <!-- Sign In Form (Visual Only in Phase 1) -->
+  <form id="loginForm" onsubmit="event.preventDefault();" class="space-y-4">
+    
+    <!-- Email Field -->
+    <div class="space-y-1.5">
+      <label for="loginEmail" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF] uppercase tracking-wider">
+        Email Address
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+          <iconify-icon icon="lucide:mail" class="text-base"></iconify-icon>
+        </div>
+        <input type="email" 
+               id="loginEmail" 
+               name="email" 
+               required
+               placeholder="name@company.com" 
+               value="maria.santos@pesolink.ph"
+               class="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-white placeholder-[#8890AA] focus:outline-none focus:ring-2 focus:ring-[#4C6CCB] focus:border-transparent transition-all">
+      </div>
+    </div>
+
+    <!-- Password Field -->
+    <div class="space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label for="loginPassword" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF] uppercase tracking-wider">
+          Password
+        </label>
+        <button type="button" 
+                onclick="openForgotPasswordModal()"
+                class="text-xs font-bold text-[#4C6CCB] hover:text-[#6C5BB5] dark:text-[#DDEBFF] hover:underline transition-colors cursor-pointer">
+          Forgot password?
+        </button>
+      </div>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+          <iconify-icon icon="lucide:lock" class="text-base"></iconify-icon>
+        </div>
+        <input type="password" 
+               id="loginPassword" 
+               name="password" 
+               required
+               placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" 
+               value="secret123"
+               class="w-full pl-10 pr-11 py-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-white placeholder-[#8890AA] focus:outline-none focus:ring-2 focus:ring-[#4C6CCB] focus:border-transparent transition-all">
+        <button type="button" 
+                onclick="togglePasswordVisibility('loginPassword', this)" 
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8890AA] hover:text-[#13224B] dark:hover:text-white transition-colors cursor-pointer">
+          <iconify-icon icon="lucide:eye" class="text-base"></iconify-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Remember Me Checkbox -->
+    <div class="flex items-center justify-between pt-1">
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" 
+               name="_remember_me" 
+               checked
+               class="w-4 h-4 rounded text-[#4C6CCB] focus:ring-[#4C6CCB] border-[rgba(19,34,75,0.2)] dark:border-white/20 bg-[#F4F6F8] dark:bg-white/5">
+        <span class="text-xs text-[#8890AA] dark:text-gray-300">Remember this device</span>
+      </label>
+    </div>
+
+    <!-- Submit Button (data-phase2 interceptor) -->
+    <div class="pt-2">
+      <button type="submit" 
+              id="loginSubmitBtn"
+              data-phase2="login_submit"
+              data-phase2-label="Sign In"
+              class="w-full py-3.5 px-4 rounded-2xl text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              style="background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);">
+        <span>Sign In</span>
+        <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+      </button>
+    </div>
+
+  </form>
+
+  <!-- Link to Register -->
+  <div class="pt-4 border-t border-[rgba(19,34,75,0.08)] dark:border-white/10 text-center text-xs text-[#8890AA] dark:text-gray-400">
+    <span>Don't have a client account?</span>
+    <a href="{{ path('app_register') }}" class="font-bold text-[#4C6CCB] hover:text-[#6C5BB5] dark:text-[#DDEBFF] hover:underline ml-1">
+      Create client account &rarr;
+    </a>
+  </div>
+
+  <!-- Note on Authentication Wiring -->
+  <div class="p-3.5 rounded-2xl bg-[#DDEBFF]/40 dark:bg-white/5 border border-[#4C6CCB]/20 text-[11px] text-[#13224B] dark:text-[#DDEBFF] flex items-start gap-2.5">
+    <iconify-icon icon="lucide:info" class="text-base text-[#4C6CCB] flex-shrink-0 mt-0.5"></iconify-icon>
+    <div class="leading-relaxed">
+      <span class="font-bold">Role resolution note:</span> Your account role (Admin vs Client) is automatically resolved from your user record.
+    </div>
+  </div>
+
+</div>
+
+<!-- Forgot Password Modal -->
+<div id="forgotPasswordModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#121A3A] w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+    <div class="flex items-start justify-between">
+      <div>
+        <h3 class="text-lg font-extrabold text-[#13224B] dark:text-white">Reset Password</h3>
+        <p class="text-xs text-[#8890AA] dark:text-gray-400 mt-1">
+          Enter your registered email and we'll send a password recovery link.
+        </p>
+      </div>
+      <button type="button" 
+              onclick="closeForgotPasswordModal()" 
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 text-[#8890AA] hover:text-black dark:hover:text-white flex items-center justify-center transition-colors">
+        <iconify-icon icon="lucide:x" class="text-base"></iconify-icon>
+      </button>
+    </div>
+
+    <form onsubmit="event.preventDefault();" class="space-y-4">
+      <div class="space-y-1.5">
+        <label for="recoveryEmail" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]">Registered Email</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+            <iconify-icon icon="lucide:mail" class="text-base"></iconify-icon>
+          </div>
+          <input type="email" 
+                 id="recoveryEmail" 
+                 required
+                 placeholder="name@company.com" 
+                 class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" 
+                onclick="closeForgotPasswordModal()"
+                class="px-4 py-2 rounded-xl text-xs font-bold text-[#8890AA] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+          Cancel
+        </button>
+        <button type="button"
+                data-phase2="send_recovery_link"
+                data-phase2-label="Send Recovery Link"
+                class="px-4 py-2 rounded-xl text-xs font-bold text-white shadow hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer"
+                style="background: linear-gradient(135deg, #13224B, #4C6CCB);">
+          <iconify-icon icon="lucide:send" class="text-sm"></iconify-icon>
+          <span>Send Recovery Link</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  function togglePasswordVisibility(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('iconify-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.setAttribute('icon', 'lucide:eye-off');
+    } else {
+      input.type = 'password';
+      icon.setAttribute('icon', 'lucide:eye');
+    }
+  }
+
+  function openForgotPasswordModal() {
+    document.getElementById('forgotPasswordModal').classList.remove('hidden');
+  }
+
+  function closeForgotPasswordModal() {
+    document.getElementById('forgotPasswordModal').classList.add('hidden');
+  }
+</script>
+{% endblock %}

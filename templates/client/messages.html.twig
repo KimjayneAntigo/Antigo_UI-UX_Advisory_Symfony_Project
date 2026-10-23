@@ -1,0 +1,121 @@
+{% extends 'client/base.html.twig' %}
+
+{% block title %}Messages — Client Portal | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Project Communications</h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Direct async collaboration with your assigned Antigo advisory team.</p>
+    </div>
+  </div>
+
+  <!-- Chat Workspace Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white rounded-3xl border border-[rgba(19,34,75,0.08)] shadow-sm overflow-hidden min-h-[580px]">
+    
+    <!-- Left: Conversations Directory -->
+    <div class="border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/10 p-4 space-y-3">
+      <div class="px-2 py-1">
+        <h3 class="text-xs font-extrabold text-[#8890AA] uppercase tracking-wider">Conversations</h3>
+      </div>
+
+      <div class="space-y-2">
+        {% for conv in conversationsList %}
+          <div class="p-3.5 rounded-2xl cursor-pointer transition-all {{ conv.active ? 'bg-[#F4F6F8] dark:bg-white/10 border border-[#6C5BB5]/30' : 'hover:bg-gray-50 dark:hover:bg-white/5' }}">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#13224B] truncate">{{ conv.project }}</span>
+              <span class="text-[10px] text-[#8890AA]">{{ conv.time }}</span>
+            </div>
+            <p class="text-[11px] text-[#8890AA] line-clamp-1 mt-1">{{ conv.last_msg }}</p>
+            {% if conv.unread > 0 %}
+              <div class="mt-2 flex justify-end">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#6C5BB5] text-white">New</span>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: Active Chat Thread (Matching Screenshot 1) -->
+    <div class="lg:col-span-2 flex flex-col justify-between p-6">
+      
+      <!-- Thread Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <img src="{{ asset('images/profile.png') }}" alt="Kimberly Jayne" class="w-10 h-10 rounded-full object-cover border border-white/20 shadow-sm"
+                 onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+            <div class="hidden w-10 h-10 rounded-full bg-[#13224B] text-white font-bold text-xs items-center justify-center">KJ</div>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#121B42]"></span>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-[#13224B]">{{ activeConversation.advisor_name }}</h3>
+            <p class="text-[11px] text-[#8890AA]">{{ activeConversation.project_title }} &bull; {{ activeConversation.advisor_role }}</p>
+          </div>
+        </div>
+
+        <button type="button" 
+                onclick="alert('Booking consultation with Kimberly')" 
+                class="px-3.5 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] hover:bg-[#F4F6F8] text-xs font-semibold text-[#13224B] transition-colors inline-flex items-center gap-1.5">
+          <iconify-icon icon="lucide:calendar"></iconify-icon>
+          <span>Schedule Call</span>
+        </button>
+      </div>
+
+      <!-- Messages Stream (Matching Screenshot 1) -->
+      <div class="py-6 space-y-4 flex-1 overflow-y-auto max-h-[380px] px-2">
+        {% for msg in activeConversation.messages %}
+          {% if msg.role == 'client' %}
+            <!-- Client Message (Left Bubble) -->
+            <div class="flex items-start gap-2.5 max-w-lg">
+              <div class="w-7 h-7 rounded-full bg-[#6C5BB5] text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 mt-1">
+                MS
+              </div>
+              <div class="space-y-1">
+                <div class="bg-[#F4F6F8] dark:bg-white/10 text-[#13224B] px-4 py-2.5 rounded-2xl rounded-tl-sm text-xs font-medium shadow-sm">
+                  {{ msg.text }}
+                </div>
+                <span class="text-[10px] text-[#8890AA] pl-1">{{ msg.time }}</span>
+              </div>
+            </div>
+          {% else %}
+            <!-- Designer Message (Right Bubble - Dark Navy Gradient like Screenshot 1) -->
+            <div class="flex items-start justify-end gap-2.5 max-w-lg ml-auto">
+              <div class="space-y-1 text-right">
+                <div class="bg-gradient-to-r from-[#13224B] to-[#203672] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm text-xs font-medium shadow-sm text-left">
+                  {{ msg.text }}
+                </div>
+                <span class="text-[10px] text-[#8890AA] pr-1">{{ msg.time }}</span>
+              </div>
+              <div class="w-7 h-7 rounded-full bg-[#13224B] text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 mt-1">
+                KJ
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Input Bar (Matching Screenshot 1) -->
+      <div class="pt-4 border-t border-gray-100 dark:border-white/10">
+        <form onsubmit="alert('Message sent! (Mocked client message)'); this.reset(); return false;" class="flex items-center gap-2">
+          <input type="text" 
+                 placeholder="Reply to Kimberly..." 
+                 required
+                 class="flex-1 px-4 py-2.5 rounded-full bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.08)] text-xs text-[#13224B] placeholder-[#8890AA] outline-none focus:ring-1 focus:ring-[#6C5BB5] transition-all">
+          <button type="submit" 
+                  class="w-10 h-10 rounded-full bg-[#4C6CCB] hover:bg-[#3d59af] text-white flex items-center justify-center shadow-md transition-all flex-shrink-0">
+            <iconify-icon icon="lucide:send" class="text-base"></iconify-icon>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

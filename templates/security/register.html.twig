@@ -1,0 +1,165 @@
+{% extends 'security/base_auth.html.twig' %}
+
+{% block title %}Create Client Account &mdash; Antigo UI/UX Advisory{% endblock %}
+
+{% block auth_content %}
+<div class="max-w-md w-full mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#13224B] dark:text-white tracking-tight">
+      Create Client Account
+    </h1>
+    <p class="text-xs sm:text-sm text-[#8890AA] dark:text-gray-400 mt-1.5">
+      Join the Antigo client workspace to track sprints, review deliverables, and collaborate.
+    </p>
+  </div>
+
+  <!-- Optional "Your submission is ready to link" notice box -->
+  {% if hasPendingSubmission|default(false) %}
+    <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-3 animate-in fade-in duration-300">
+      <iconify-icon icon="lucide:check-circle-2" class="text-lg text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5"></iconify-icon>
+      <div>
+        <div class="font-bold text-emerald-900 dark:text-emerald-200">Your submission is ready to link</div>
+        <p class="mt-0.5 text-emerald-700 dark:text-emerald-400 text-[11px] leading-relaxed">
+          We found your consultation booking or project inquiry. Complete your account to automatically link your submission to your client dashboard.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Register Form (Visual Only in Phase 1) -->
+  <form id="registerForm" onsubmit="event.preventDefault();" class="space-y-4">
+    
+    <!-- Full Name Field -->
+    <div class="space-y-1.5">
+      <label for="registerName" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF] uppercase tracking-wider">
+        Full Name
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+          <iconify-icon icon="lucide:user" class="text-base"></iconify-icon>
+        </div>
+        <input type="text" 
+               id="registerName" 
+               name="name" 
+               required
+               placeholder="Maria Santos" 
+               class="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-white placeholder-[#8890AA] focus:outline-none focus:ring-2 focus:ring-[#4C6CCB] focus:border-transparent transition-all">
+      </div>
+    </div>
+
+    <!-- Email Field -->
+    <div class="space-y-1.5">
+      <label for="registerEmail" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF] uppercase tracking-wider">
+        Work Email Address
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+          <iconify-icon icon="lucide:mail" class="text-base"></iconify-icon>
+        </div>
+        <input type="email" 
+               id="registerEmail" 
+               name="email" 
+               required
+               placeholder="name@company.com" 
+               class="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-white placeholder-[#8890AA] focus:outline-none focus:ring-2 focus:ring-[#4C6CCB] focus:border-transparent transition-all">
+      </div>
+    </div>
+
+    <!-- Password Field -->
+    <div class="space-y-1.5">
+      <label for="registerPassword" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF] uppercase tracking-wider">
+        Password
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+          <iconify-icon icon="lucide:lock" class="text-base"></iconify-icon>
+        </div>
+        <input type="password" 
+               id="registerPassword" 
+               name="password" 
+               required
+               placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" 
+               class="w-full pl-10 pr-11 py-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-white placeholder-[#8890AA] focus:outline-none focus:ring-2 focus:ring-[#4C6CCB] focus:border-transparent transition-all">
+        <button type="button" 
+                onclick="togglePasswordVisibility('registerPassword', this)" 
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8890AA] hover:text-[#13224B] dark:hover:text-white transition-colors cursor-pointer">
+          <iconify-icon icon="lucide:eye" class="text-base"></iconify-icon>
+        </button>
+      </div>
+      <p class="text-[11px] text-[#8890AA] dark:text-gray-400 mt-1 flex items-center gap-1">
+        <iconify-icon icon="lucide:info" class="text-xs"></iconify-icon>
+        <span>Minimum 8 characters.</span>
+      </p>
+    </div>
+
+    <!-- Confirm Password Field -->
+    <div class="space-y-1.5">
+      <label for="registerPasswordConfirm" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF] uppercase tracking-wider">
+        Confirm Password
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8890AA]">
+          <iconify-icon icon="lucide:shield-check" class="text-base"></iconify-icon>
+        </div>
+        <input type="password" 
+               id="registerPasswordConfirm" 
+               name="password_confirm" 
+               required
+               placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" 
+               class="w-full pl-10 pr-11 py-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-white placeholder-[#8890AA] focus:outline-none focus:ring-2 focus:ring-[#4C6CCB] focus:border-transparent transition-all">
+        <button type="button" 
+                onclick="togglePasswordVisibility('registerPasswordConfirm', this)" 
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8890AA] hover:text-[#13224B] dark:hover:text-white transition-colors cursor-pointer">
+          <iconify-icon icon="lucide:eye" class="text-base"></iconify-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Terms notice -->
+    <p class="text-[11px] text-[#8890AA] leading-relaxed pt-1">
+      By creating an account, you agree to our confidential studio advisory terms and SLA policies.
+    </p>
+
+    <!-- Submit Button (data-phase2 interceptor) -->
+    <div class="pt-2">
+      <button type="submit" 
+              id="registerSubmitBtn"
+              data-phase2="register_submit"
+              data-phase2-label="Create Client Account"
+              class="w-full py-3.5 px-4 rounded-2xl text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              style="background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);">
+        <span>Create client account</span>
+        <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+      </button>
+    </div>
+
+  </form>
+
+  <!-- Link to Login -->
+  <div class="pt-4 border-t border-[rgba(19,34,75,0.08)] dark:border-white/10 text-center text-xs text-[#8890AA] dark:text-gray-400">
+    <span>Already have an account?</span>
+    <a href="{{ path('app_login') }}" class="font-bold text-[#4C6CCB] hover:text-[#6C5BB5] dark:text-[#DDEBFF] hover:underline ml-1">
+      Sign in &rarr;
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  function togglePasswordVisibility(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('iconify-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.setAttribute('icon', 'lucide:eye-off');
+    } else {
+      input.type = 'password';
+      icon.setAttribute('icon', 'lucide:eye');
+    }
+  }
+</script>
+{% endblock %}

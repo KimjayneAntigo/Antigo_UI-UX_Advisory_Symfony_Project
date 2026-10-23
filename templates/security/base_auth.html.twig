@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="turbo-prefetch" content="false">
+  <meta name="turbo-visit-control" content="reload">
+  <title>{% block title %}Sign In &mdash; Antigo UI/UX Advisory{% endblock %}</title>
+
+  <!-- Early Theme Initializer -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('antigo-theme') || localStorage.getItem('antigo_theme');
+        if (saved) document.documentElement.dataset.theme = saved;
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Iconify CDN -->
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          colors: {
+            navy: '#13224B',
+            violet: '#6C5BB5',
+            blue: '#4C6CCB',
+            'light-blue': '#DDEBFF',
+            'light-gray': '#F4F6F8',
+            'dark-gray': '#4b4b4b',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Global App Styles -->
+  <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+  {% block stylesheets %}{% endblock %}
+
+  {% block javascripts %}
+    {% block importmap %}{{ importmap('app') }}{% endblock %}
+  {% endblock %}
+</head>
+<body class="min-h-screen bg-[#F4F6F8] dark:bg-[#0A1026] font-poppins text-[#13224B] dark:text-[#EEF1FF] antialiased flex flex-col justify-between" data-turbo="false">
+
+  <!-- Minimal Header Bar -->
+  <header class="w-full px-6 py-4 flex items-center justify-between border-b border-black/5 dark:border-white/10 bg-white/70 dark:bg-[#0c142c]/70 backdrop-blur-md sticky top-0 z-30">
+    <a href="{{ path('app_home') }}" class="flex items-center gap-3 group" title="Antigo UI/UX Advisory">
+      <img src="{{ asset('images/antigo-mark.png') }}" 
+           alt="Antigo Logo" 
+           class="h-9 sm:h-10 w-auto max-w-[54px] object-contain flex-shrink-0 group-hover:scale-105 transition-transform dark:brightness-110">
+      <div class="flex flex-col justify-center leading-none">
+        <span class="font-extrabold text-base sm:text-lg tracking-wider text-[#13224B] dark:text-white uppercase font-poppins leading-none">ANTIGO</span>
+        <span class="text-[9px] font-bold tracking-[0.2em] text-[#6C5BB5] dark:text-[#DDEBFF] uppercase mt-1 font-poppins leading-none">UI/UX ADVISORY</span>
+      </div>
+    </a>
+
+    <div class="flex items-center gap-3">
+      <!-- Dark/Light Theme Toggle -->
+      <button type="button" 
+              onclick="toggleTheme()" 
+              class="w-9 h-9 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-[#13224B] dark:text-white transition-all cursor-pointer"
+              title="Toggle theme">
+        <iconify-icon icon="lucide:sun" class="text-base dark:hidden"></iconify-icon>
+        <iconify-icon icon="lucide:moon" class="text-base hidden dark:block text-amber-300"></iconify-icon>
+      </button>
+
+      <!-- Back Link -->
+      <a href="{{ path('app_home') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 text-xs font-bold text-[#13224B] dark:text-white transition-all">
+        <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+        <span>Back</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Split-Screen Container -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
+    <div class="w-full max-w-5xl bg-white dark:bg-[#121A3A] rounded-3xl shadow-xl border border-black/5 dark:border-white/10 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
+      
+      <!-- Left Panel: Gradient Brand Experience (Lg: 5 cols) -->
+      <div class="lg:col-span-5 relative p-8 sm:p-12 text-white flex flex-col justify-between overflow-hidden"
+           style="background: linear-gradient(145deg, #0d1738 0%, #13224B 45%, #243b7e 100%);">
+        
+        <!-- Subtle Decorative Background Glows -->
+        <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#4C6CCB]/25 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-20 w-72 h-72 rounded-full bg-[#6C5BB5]/30 blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 pt-2 sm:pt-4">
+          <h2 class="text-2xl sm:text-3xl lg:text-[32px] font-extrabold tracking-tight text-white leading-tight sm:leading-snug">
+            Designing digital products with strategic precision.
+          </h2>
+          <p class="text-xs sm:text-sm text-white/80 mt-4 leading-relaxed">
+            Real-time sprint progress, milestone approvals, interactive prototypes, and transparent deliverables in USD ($).
+          </p>
+        </div>
+
+        <!-- Kimberly Jayne Antigo Studio Bio Card -->
+        <div class="relative z-10 mt-8 pt-6 border-t border-white/15 flex items-center gap-3.5">
+          <img src="{{ asset('images/profile.png') }}" 
+               alt="Kimberly Jayne Antigo" 
+               class="w-11 h-11 rounded-full object-cover border-2 border-white/30 shadow-md flex-shrink-0"
+               onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+          <div class="hidden w-11 h-11 rounded-full bg-white/20 text-white font-extrabold text-xs items-center justify-center flex-shrink-0 border-2 border-white/30">
+            KJA
+          </div>
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-white truncate">Kimberly Jayne Antigo</div>
+            <div class="text-[11px] text-[#DDEBFF]/80">Lead UI/UX Advisor &amp; Consultant</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Form Area (Lg: 7 cols) -->
+      <div class="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center bg-white dark:bg-[#121A3A]">
+        {% block auth_content %}{% endblock %}
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Minimal Footer Bar -->
+  <footer class="w-full px-6 py-4 text-center border-t border-black/5 dark:border-white/10 bg-white/50 dark:bg-[#0A1026]/50 text-xs text-[#8890AA] dark:text-[#8890AA] flex flex-col sm:flex-row items-center justify-between gap-2">
+    <div>
+      &copy; 2026 Kimberly Jayne Antigo &bull; Antigo UI/UX Advisory. All rights reserved.
+    </div>
+    <div class="flex items-center gap-4 text-[11px]">
+      <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+        <iconify-icon icon="lucide:shield-check"></iconify-icon> Secure 256-bit Portal
+      </span>
+      <a href="mailto:antigokimberlyjayne@gmail.com" class="hover:underline hover:text-[#4C6CCB]">Need Help?</a>
+    </div>
+  </footer>
+
+  <!-- Include Shared Toast Handler for data-phase2 controls -->
+  {% include '_partials/phase2-handler.html.twig' %}
+
+  <script>
+    function toggleTheme() {
+      var current = document.documentElement.dataset.theme;
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('antigo-theme', next);
+      localStorage.setItem('antigo_theme', next);
+    }
+  </script>
+
+  {% block page_scripts %}{% endblock %}
+</body>
+</html>

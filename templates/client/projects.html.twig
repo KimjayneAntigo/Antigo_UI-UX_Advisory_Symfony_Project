@@ -1,0 +1,89 @@
+{% extends 'client/base.html.twig' %}
+
+{% block title %}My Projects — Client Portal | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">My Projects &amp; Sprints</h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Track sprint deliverables, active milestones, and design iterations.</p>
+    </div>
+    
+    <div>
+      <button type="button" 
+              onclick="alert('Start New Project requirement wizard placeholder')" 
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-md transition-all">
+        <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+        <span>Start New Project</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="grid grid-cols-1 gap-6">
+    {% for p in projects %}
+      <div class="bg-white rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs font-bold text-[#6C5BB5]">{{ p.code }}</span>
+              <span class="text-xs text-[#8890AA]">&bull;</span>
+              <span class="text-xs text-[#8890AA]">{{ p.service }}</span>
+            </div>
+            <a href="{{ path('client_project_detail', {id: p.id}) }}" class="text-lg font-bold text-[#13224B] dark:text-white hover:text-[#4C6CCB] transition-colors hover:underline block mt-1">
+              {{ p.title }}
+            </a>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap {{ p.stage == 'Delivered' ? 'bg-[#DFF6E8] text-[#127A45] badge-delivered' : (p.stage == 'Testing' ? 'bg-[#FFF1D6] text-[#946200] badge-testing' : 'bg-[#DDEBFF] text-[#13224B] badge-design') }}">
+              {{ p.stage }}
+            </span>
+            <span class="font-mono text-sm font-extrabold text-[#13224B] dark:text-white">{{ p.budget }}</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-[#8890AA]">Milestone Completion</span>
+            <span class="font-bold text-[#13224B] dark:text-white">{{ p.progress }}%</span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+            <div class="h-full rounded-full bg-gradient-to-r from-[#4C6CCB] to-[#6C5BB5]" style="width: {{ p.progress }}%;"></div>
+          </div>
+        </div>
+
+        <!-- Project Meta & Action Links -->
+        <div class="pt-3 border-t border-gray-100 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-4 text-[#8890AA]">
+            <span class="flex items-center gap-1.5">
+              <iconify-icon icon="lucide:calendar" class="text-sm"></iconify-icon>
+              Target: {{ p.delivery_date }}
+            </span>
+            <span class="flex items-center gap-1.5">
+              <iconify-icon icon="lucide:file-text" class="text-sm"></iconify-icon>
+              {{ p.files_count }} files
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <a href="{{ path('client_project_detail', {id: p.id}) }}" 
+               class="px-3.5 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white font-bold transition-all shadow-sm">
+              Workspace &rarr;
+            </a>
+            <a href="{{ path('client_messages') }}" 
+               class="px-3.5 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#13224B] dark:text-[#EEF1FF] hover:bg-[#F4F6F8] dark:hover:bg-white/10 font-semibold transition-colors">
+              Chat Advisor
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

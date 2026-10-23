@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="turbo-prefetch" content="false">
+  <meta name="turbo-visit-control" content="reload">
+  <title>{{ pageTitle|default('Log In | Antigo UI/UX Advisory') }}</title>
+
+  <!-- Early Theme Initializer -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('antigo-theme') || localStorage.getItem('antigo_theme');
+        if (saved) document.documentElement.dataset.theme = saved;
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Iconify CDN -->
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          colors: {
+            navy: '#13224B',
+            violet: '#6C5BB5',
+            blue: '#4C6CCB',
+            'light-blue': '#DDEBFF',
+            'light-gray': '#F4F6F8',
+            'dark-gray': '#4b4b4b',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Global Design Tokens & App Styles -->
+  <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+
+  <style>
+    .brand-gradient-panel {
+      background: linear-gradient(135deg, #13224B 0%, #1c2c5e 40%, #6C5BB5 75%, #4C6CCB 100%);
+    }
+    .role-pill {
+      transition: all .25s ease;
+    }
+    .role-pill.active {
+      background: linear-gradient(100deg, #13224B 0%, #6C5BB5 55%, #4C6CCB 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(76,108,203,.35);
+    }
+    .role-pill:not(.active) {
+      color: #8890AA;
+      background: transparent;
+    }
+    .btn-brand-primary {
+      background: linear-gradient(100deg, #13224B 0%, #6C5BB5 55%, #4C6CCB 100%);
+      color: #FFFFFF;
+      box-shadow: 0 14px 28px -10px rgba(76,108,203,.45);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .btn-brand-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 34px -8px rgba(76,108,203,.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-[#F4F6F8] dark:bg-[#0B1230] text-[#13224B] dark:text-[#EEF1FF] font-poppins transition-colors duration-200">
+
+  <!-- Minimal Header Bar -->
+  <header class="w-full bg-white/80 dark:bg-[#121B42]/80 backdrop-blur-md border-b border-[rgba(19,34,75,0.08)] dark:border-white/10 py-4 px-6 sm:px-12 sticky top-0 z-40">
+    <div class="max-w-[1360px] mx-auto flex items-center justify-between">
+      <!-- Logo -->
+      <a href="{{ path('admin_overview') }}" class="flex items-center gap-3 text-decoration-none group">
+        <img src="{{ asset('images/antigo-mark.png') }}" alt="Antigo Logo" class="h-9 w-auto object-contain flex-shrink-0">
+        <div class="flex flex-col justify-center leading-tight">
+          <span class="font-extrabold text-lg tracking-wider text-[#13224B] dark:text-white">ANTIGO</span>
+          <span class="text-[9px] tracking-widest text-[#6C5BB5] dark:text-[#DDEBFF] uppercase font-bold">UI/UX ADVISORY</span>
+        </div>
+      </a>
+
+      <!-- Quick Portals / Back Links -->
+      <div class="flex items-center gap-3 text-xs font-semibold">
+        <a href="{{ path('admin_overview') }}" class="text-[#8890AA] hover:text-[#4C6CCB] transition-colors hidden sm:inline">Admin Portal</a>
+        <span class="text-[#8890AA]/40 hidden sm:inline">&bull;</span>
+        <a href="{{ path('client_dashboard') }}" class="text-[#8890AA] hover:text-[#4C6CCB] transition-colors hidden sm:inline">Client Portal</a>
+        <button type="button" onclick="toggleAntigoTheme()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-[rgba(19,34,75,0.1)] dark:border-white/15 flex items-center justify-center text-xs text-[#8890AA] dark:text-amber-300 ml-2" title="Toggle theme">
+          <iconify-icon icon="lucide:moon" class="dark-hidden"></iconify-icon>
+          <iconify-icon icon="lucide:sun" class="light-hidden"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Auth Section -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12">
+    <div class="w-full max-w-[1060px] min-h-[580px] bg-white dark:bg-[#121B42] rounded-3xl overflow-hidden border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-2xl flex flex-col lg:flex-row">
+
+      <!-- Left: Brand Gradient Panel -->
+      <div class="lg:w-5/12 brand-gradient-panel p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/5 blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#6C5BB5]/30 blur-2xl pointer-events-none"></div>
+
+        <div class="relative z-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-sm mb-8 border border-white/15">
+            <iconify-icon icon="lucide:shield-check" class="text-sm text-[#DDEBFF]"></iconify-icon>
+            <span>Verified Studio Portal</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-snug mb-4">
+            Designing experiences that drive impact.
+          </h2>
+          <p class="text-sm text-white/80 leading-relaxed">
+            Access your active project dashboard, review wireframe iterations, coordinate design system assets, and collaborate directly with Kimberly.
+          </p>
+        </div>
+
+        <div class="relative z-10 pt-8 mt-8 border-t border-white/15">
+          <div class="flex items-center gap-3">
+            <img src="{{ asset('images/profile.png') }}" 
+                 alt="Kimberly Jayne Antigo" 
+                 class="w-11 h-11 rounded-full object-cover border-2 border-white/30 shadow-md flex-shrink-0"
+                 onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+            <div class="hidden w-11 h-11 rounded-full bg-[#4C6CCB] text-white font-bold text-sm items-center justify-center">KJ</div>
+            <div>
+              <div class="text-sm font-bold text-white">Kimberly Jayne Antigo</div>
+              <div class="text-xs text-[#DDEBFF]/80">Founder &amp; Principal Consultant</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Login Form Column -->
+      <div class="lg:w-7/12 p-8 sm:p-12 flex flex-col justify-between">
+        <div>
+          <!-- Header & Role Switcher -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-[#13224B] dark:text-white">Log In</h1>
+              <p class="text-xs sm:text-sm text-[#8890AA] mt-1">Select your account role to continue</p>
+            </div>
+            <!-- Role Toggle Pills -->
+            <div class="inline-flex bg-[#F4F6F8] dark:bg-[#0E1638] p-1 rounded-full border border-[rgba(19,34,75,0.08)] dark:border-white/10 self-start sm:self-auto">
+              <button type="button" 
+                      id="role-client" 
+                      onclick="setAuthRole('client')" 
+                      class="role-pill active px-5 py-2 rounded-full text-xs font-bold cursor-pointer">
+                Client
+              </button>
+              <button type="button" 
+                      id="role-admin" 
+                      onclick="setAuthRole('admin')" 
+                      class="role-pill px-5 py-2 rounded-full text-xs font-bold cursor-pointer">
+                Admin
+              </button>
+            </div>
+          </div>
+
+          <!-- Login Form (Visual Only in Phase 1) -->
+          <form class="space-y-5" onsubmit="event.preventDefault(); showPhase2Toast('Available once the database is connected.');">
+            <input type="hidden" name="role" id="auth_role" value="client">
+
+            <!-- Email Field -->
+            <div>
+              <label for="email" class="block text-xs font-bold uppercase tracking-wider text-[#8890AA] mb-2">Email Address</label>
+              <div class="relative">
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       required 
+                       placeholder="name@company.com"
+                       value="maria@pesolink.ph"
+                       class="w-full px-4 py-3.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-[#13224B] dark:text-white text-sm font-medium outline-none focus:border-[#6C5BB5] focus:bg-white dark:focus:bg-[#0E1638] transition-all">
+                <iconify-icon icon="lucide:mail" class="absolute right-4 top-4 text-[#8890AA] text-lg pointer-events-none"></iconify-icon>
+              </div>
+            </div>
+
+            <!-- Password Field -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label for="password" class="block text-xs font-bold uppercase tracking-wider text-[#8890AA]">Password</label>
+                <a href="javascript:void(0)" onclick="openForgotModal()" class="text-xs text-[#6C5BB5] dark:text-[#DDEBFF] font-semibold hover:underline">Forgot password?</a>
+              </div>
+              <div class="relative">
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       required 
+                       placeholder="••••••••"
+                       value="••••••••••••"
+                       class="w-full px-4 py-3.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-[#13224B] dark:text-white text-sm font-medium outline-none focus:border-[#6C5BB5] focus:bg-white dark:focus:bg-[#0E1638] transition-all">
+                <iconify-icon icon="lucide:lock" class="absolute right-4 top-4 text-[#8890AA] text-lg pointer-events-none"></iconify-icon>
+              </div>
+            </div>
+
+            <!-- Submit Button (Marked with data-phase2) -->
+            <button type="submit" 
+                    id="loginSubmitBtn"
+                    data-phase2="login_submit"
+                    data-phase2-label="Account Login"
+                    class="btn-brand-primary w-full py-4 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+              <span id="btn-text">Sign In as Client</span>
+              <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+            </button>
+          </form>
+
+          <!-- Direct Navigation Shortcut Banners for Paired Prototyping -->
+          <div class="mt-6 p-3.5 rounded-2xl bg-[#DDEBFF]/40 dark:bg-white/5 border border-[#4C6CCB]/20 flex items-center justify-between text-xs">
+            <span class="text-[#13224B] dark:text-[#DDEBFF] font-medium">Quick Preview Links:</span>
+            <div class="flex items-center gap-2">
+              <a href="{{ path('client_dashboard') }}" class="px-2.5 py-1 rounded-lg bg-[#4C6CCB] text-white font-bold hover:bg-[#3d59af] transition-colors">Client &rarr;</a>
+              <a href="{{ path('admin_overview') }}" class="px-2.5 py-1 rounded-lg bg-[#13224B] text-white font-bold hover:bg-[#1a2d61] transition-colors">Admin &rarr;</a>
+            </div>
+          </div>
+
+          <!-- Register CTA -->
+          <div class="mt-6 pt-5 border-t border-[rgba(19,34,75,0.07)] dark:border-white/10 text-center">
+            <p class="text-xs text-[#8890AA]">
+              New here after submitting an inquiry?
+              <a href="{{ path('app_register') }}" class="text-[#6C5BB5] dark:text-[#DDEBFF] font-semibold hover:underline ml-1">Create your client account &rarr;</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgotModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="closeForgotModal()">
+    <div class="bg-white dark:bg-[#121B42] text-[#13224B] dark:text-white rounded-2xl max-w-md w-full p-6 sm:p-8 border border-[rgba(19,34,75,0.08)] dark:border-white/15 shadow-2xl relative" onclick="event.stopPropagation()">
+      <button onclick="closeForgotModal()" class="absolute right-4 top-4 text-[#8890AA] hover:text-[#13224B] dark:hover:text-white p-2">
+        <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+      </button>
+      <div class="w-12 h-12 rounded-xl bg-[#DDEBFF] text-[#4C6CCB] flex items-center justify-center text-2xl mb-4">
+        <iconify-icon icon="lucide:key-round"></iconify-icon>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Reset Password</h3>
+      <p class="text-xs sm:text-sm text-[#8890AA] mb-6">Enter your registered email and we'll send a password recovery link. (Phase 2: email &amp; auth integration)</p>
+      <div class="space-y-4">
+        <input type="email" placeholder="you@company.com" class="w-full px-4 py-3 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-sm font-medium outline-none">
+        <button type="button" 
+                data-phase2="send_recovery_link"
+                data-phase2-label="Password Recovery Link"
+                onclick="closeForgotModal()"
+                class="btn-brand-primary w-full py-3.5 rounded-xl font-bold uppercase text-xs tracking-wider cursor-pointer">
+          Send Recovery Link
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="w-full py-6 text-center text-xs text-[#8890AA] border-t border-[rgba(19,34,75,0.06)] dark:border-white/10 bg-white dark:bg-[#0E1638]">
+    &copy; 2026 Antigo UI/UX Advisory. All rights reserved.
+  </footer>
+
+  <!-- Role Selector Script -->
+  <script>
+    function setAuthRole(role) {
+      document.getElementById('role-client').classList.toggle('active', role === 'client');
+      document.getElementById('role-admin').classList.toggle('active', role === 'admin');
+      document.getElementById('btn-text').innerText = role === 'client' ? 'Sign In as Client' : 'Sign In as Admin';
+      document.getElementById('auth_role').value = role;
+      
+      const emailInput = document.getElementById('email');
+      if (role === 'admin') {
+        emailInput.value = 'admin@antigo.com';
+      } else {
+        emailInput.value = 'maria@pesolink.ph';
+      }
+    }
+
+    function openForgotModal() {
+      document.getElementById('forgotModal').classList.remove('hidden');
+    }
+    function closeForgotModal() {
+      document.getElementById('forgotModal').classList.add('hidden');
+    }
+
+    function toggleAntigoTheme() {
+      const root = document.documentElement;
+      const current = root.dataset.theme || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('antigo-theme', next);
+        localStorage.setItem('antigo_theme', next);
+      } catch (e) {}
+    }
+  </script>
+
+  <!-- Phase 2 Toast Handler -->
+  {% include '_partials/phase2-handler.html.twig' %}
+</body>
+</html>

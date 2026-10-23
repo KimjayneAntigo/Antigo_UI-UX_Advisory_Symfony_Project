@@ -1,0 +1,108 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Bookings — Scheduled Consultations | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Scheduled Consultations</h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Manage client consultation sessions, review calendar slots, and update meeting confirmations.</p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <button type="button" 
+              onclick="alert('Sync Calendar placeholder')" 
+              class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-2">
+        <iconify-icon icon="lucide:calendar-plus"></iconify-icon>
+        <span>Add Session</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="flex items-center gap-2 flex-wrap">
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
+      All ({{ stats.total|default(3) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
+      Confirmed ({{ stats.confirmed|default(2) }})
+    </button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
+      Pending ({{ stats.pending|default(1) }})
+    </button>
+  </div>
+
+  <!-- Bookings List Card -->
+  <div class="bg-white rounded-3xl border border-[rgba(19,34,75,0.08)] shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] text-[#8890AA] uppercase tracking-wider font-bold">
+          <tr>
+            <th class="py-4 px-6">Client / Contact</th>
+            <th class="py-4 px-6">Advisory Service</th>
+            <th class="py-4 px-6">Scheduled Slot</th>
+            <th class="py-4 px-6">Meeting Format</th>
+            <th class="py-4 px-6">Status</th>
+            <th class="py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[rgba(19,34,75,0.05)]">
+          {% for b in bookings %}
+            <tr class="hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors">
+              <td class="py-4 px-6">
+                <span class="font-bold text-[#13224B] text-sm block">{{ b.client_name }}</span>
+                <span class="text-[11px] text-[#4C6CCB] font-mono">{{ b.email }}</span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="font-semibold text-[#13224B] block">{{ b.service }}</span>
+                <span class="text-[11px] text-[#8890AA]">{{ b.notes }}</span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="font-bold text-[#13224B] block">{{ b.date }}</span>
+                <span class="text-[11px] text-amber-600 font-semibold">{{ b.time }}</span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F6F8] dark:bg-white/10 font-medium text-[#13224B] text-[11px]">
+                  <iconify-icon icon="lucide:video" class="text-xs text-[#4C6CCB]"></iconify-icon>
+                  {{ b.format }}
+                </span>
+              </td>
+              <td class="py-4 px-6">
+                {% if b.status == 'confirmed' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] badge-confirmed whitespace-nowrap">
+                    Confirmed
+                  </span>
+                {% elseif b.status == 'pending' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] badge-pending whitespace-nowrap">
+                    Awaiting Studio
+                  </span>
+                {% else %}
+                  <span class="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-700">
+                    {{ b.status|capitalize }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-4 px-6 text-right space-x-2">
+                <button type="button" 
+                        onclick="alert('Opening Google Meet video bridge for {{ b.client_name }}')" 
+                        class="px-3 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-sm transition-all">
+                  Join Call
+                </button>
+                <button type="button" 
+                        onclick="alert('Reschedule session with {{ b.client_name }}')" 
+                        class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] hover:bg-[#F4F6F8] text-[#13224B] text-xs font-semibold transition-colors">
+                  Reschedule
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

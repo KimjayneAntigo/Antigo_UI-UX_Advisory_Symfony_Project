@@ -1,0 +1,187 @@
+{% extends 'client/base.html.twig' %}
+
+{% block title %}Dashboard — Client Portal | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-7">
+
+  <!-- Welcome Greeting & Start New Project CTA -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#13224B] tracking-tight">
+        Welcome back, {{ clientFirstName|default('Kimmyyy') }}
+      </h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-1">
+        Here's what's happening with your projects today.
+      </p>
+    </div>
+
+    <div>
+      <button type="button" 
+              data-phase2="client_start_project" 
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all">
+        <iconify-icon icon="lucide:plus" class="text-sm"></iconify-icon>
+        <span>Start New Project</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3 Quick Metric Cards (Matching Screenshot 2) -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    
+    <!-- 1. Active Projects -->
+    <div class="bg-white rounded-3xl p-6 border border-[rgba(19,34,75,0.08)] shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#4C6CCB]/15 text-[#4C6CCB] flex items-center justify-center text-xl flex-shrink-0">
+        <iconify-icon icon="lucide:folder-kanban"></iconify-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-extrabold text-[#13224B] leading-none">
+          {{ stats.activeProjects|default(2) }}
+        </div>
+        <p class="text-xs text-[#8890AA] font-medium mt-1">
+          Active projects
+        </p>
+      </div>
+    </div>
+
+    <!-- 2. Files Shared -->
+    <div class="bg-white rounded-3xl p-6 border border-[rgba(19,34,75,0.08)] shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#6C5BB5]/15 text-[#6C5BB5] flex items-center justify-center text-xl flex-shrink-0">
+        <iconify-icon icon="lucide:file-text"></iconify-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-extrabold text-[#13224B] leading-none">
+          {{ stats.filesShared|default(14) }}
+        </div>
+        <p class="text-xs text-[#8890AA] font-medium mt-1">
+          Files shared
+        </p>
+      </div>
+    </div>
+
+    <!-- 3. Unread Messages -->
+    <div class="bg-white rounded-3xl p-6 border border-[rgba(19,34,75,0.08)] shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-violet-500/15 text-violet-600 flex items-center justify-center text-xl flex-shrink-0">
+        <iconify-icon icon="lucide:message-square"></iconify-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-extrabold text-[#13224B] leading-none">
+          {{ stats.unreadMessages|default(2) }}
+        </div>
+        <p class="text-xs text-[#8890AA] font-medium mt-1">
+          Unread messages
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Two Column Layout: Your Projects (Left) & Recent Activity (Right) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left: Your Projects Table / List (Col 1-2) -->
+    <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] shadow-sm space-y-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-extrabold text-[#13224B]">Your Projects</h2>
+        <a href="{{ path('client_projects') }}" class="text-xs font-semibold text-[#6C5BB5] hover:underline">
+          View all
+        </a>
+      </div>
+
+      <div class="space-y-4">
+        {% for p in projects %}
+          <div class="p-4 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.04)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            
+            <div class="min-w-0 flex-1">
+              <h3 class="text-sm font-bold text-[#13224B] truncate">
+                <a href="{{ path('client_project_detail', {id: p.id|default(loop.index)}) }}" class="hover:text-[#6C5BB5] transition-colors">
+                  {{ p.title }}
+                </a>
+              </h3>
+              <p class="text-[11px] text-[#8890AA] mt-0.5">Started {{ p.started }} &bull; {{ p.phase }}</p>
+            </div>
+
+            <!-- Status Pill Badge -->
+            <div class="flex-shrink-0">
+              {% if p.status_color == 'blue' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#DDEBFF] text-[#13224B] badge-design uppercase tracking-wider whitespace-nowrap">
+                  {{ p.status_badge }}
+                </span>
+              {% elseif p.status_color == 'amber' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#FFF1D6] text-[#946200] badge-testing uppercase tracking-wider whitespace-nowrap">
+                  {{ p.status_badge }}
+                </span>
+              {% elseif p.status_color == 'emerald' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#DFF6E8] text-[#127A45] badge-delivered uppercase tracking-wider whitespace-nowrap">
+                  {{ p.status_badge }}
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Progress bar -->
+            <div class="w-full sm:w-36 space-y-1">
+              <div class="text-[10px] text-[#8890AA] text-right font-semibold">{{ p.progress }}% complete</div>
+              <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+                <div class="h-full rounded-full bg-[#6C5BB5]" style="width: {{ p.progress }}%;"></div>
+              </div>
+            </div>
+
+            <!-- View Button -->
+            <div class="flex-shrink-0">
+              <a href="{{ path('client_project_detail', {id: p.id|default(loop.index)}) }}" 
+                 class="px-3.5 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 hover:bg-white dark:hover:bg-white/10 text-xs font-bold text-[#13224B] dark:text-[#EEF1FF] transition-colors">
+                View
+              </a>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: Recent Activity & Studio Advisory Lead Card (Col 3) -->
+    <div class="space-y-6">
+      <div class="bg-white rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] shadow-sm space-y-5">
+        <h2 class="text-base font-extrabold text-[#13224B]">Recent Activity</h2>
+
+        <div class="space-y-4">
+          {% for act in recentActivity %}
+            <div class="flex items-start gap-3">
+              <span class="w-2 h-2 rounded-full bg-[#6C5BB5] flex-shrink-0 mt-1.5"></span>
+              <div>
+                <p class="text-xs font-bold text-[#13224B] leading-tight">{{ act.text }}</p>
+                <span class="text-[10.5px] text-[#8890AA] block mt-0.5">{{ act.time }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Studio Advisory Lead Card -->
+      <div class="dashboard-card advisor-card p-6">
+        <div class="flex items-center gap-3.5 mb-4">
+          <img src="{{ asset('images/profile.png') }}" alt="Kimberly Jayne Antigo" class="w-12 h-12 rounded-full object-cover border-2 border-white advisor-avatar shadow-md"
+               onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.style.display='flex';">
+          <div class="hidden w-12 h-12 rounded-full bg-[#13224B] text-white font-bold text-sm items-center justify-center advisor-avatar border-2 border-white">KJA</div>
+          <div>
+            <h4 class="text-sm font-bold text-[#13224B]">Kimberly Jayne Antigo</h4>
+            <p class="text-[11px] text-[#6C5BB5] font-semibold">Lead UI/UX Advisor</p>
+          </div>
+        </div>
+        <p class="text-xs text-[#4b4b4b] leading-relaxed mb-4">
+          Need strategic guidance or custom sprint adjustments? I am available for direct collaboration.
+        </p>
+        <div class="pt-3 border-t border-[rgba(19,34,75,0.08)] flex items-center justify-between text-xs">
+          <span class="text-[11px] text-[#8890AA]">Response SLA: &lt; 24h</span>
+          <a href="mailto:admin@antigo.com" class="font-bold text-[#4C6CCB] hover:underline flex items-center gap-1">
+            <iconify-icon icon="lucide:mail"></iconify-icon>
+            <span>Contact Studio</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
