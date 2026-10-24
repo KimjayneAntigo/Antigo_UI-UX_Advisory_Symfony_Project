@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class AdminController extends AbstractController
 {
     #[Route('/admin', name: 'admin_overview')]
+    #[Route('/admin/dashboard', name: 'admin_overview_alias')]
     public function overview(): Response
     {
         return $this->render('admin/overview.html.twig', [

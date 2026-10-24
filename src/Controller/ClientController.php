@@ -11,6 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class ClientController extends AbstractController
 {
     #[Route('/client', name: 'client_dashboard')]
+    #[Route('/client/dashboard', name: 'client_dashboard_alias')]
     public function dashboard(): Response
     {
         return $this->render('client/dashboard.html.twig', [
