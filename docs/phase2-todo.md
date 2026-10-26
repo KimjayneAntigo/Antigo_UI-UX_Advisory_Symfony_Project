@@ -26,10 +26,10 @@ This checklist tracks every control and action across **Antigo Advisory WebApp**
 | `/admin/projects/{id}` | `button[data-phase2="send_invoice"]` | `data-phase2="send_invoice"` | Sets `invoice_sent_at = NOW()` on `projects`, triggers notification email and bell alert to client, and unlocks online invoice payment in the client workspace. |
 | `/admin/projects/{id}` | `button[data-phase2="confirm_cancel_project"]` | `data-phase2="confirm_cancel_project"` | Updates project `status_type = 'cancelled'`, logs `cancelled_by = current_user_id`, sets `cancelled_at = NOW()`, records cancellation reason, and sets project to read-only audit mode. |
 | `/admin/projects/{id}` | `button[data-phase2="delete_permanently"]` | `data-phase2="delete_permanently"` | Available only in Cancelled state: performs hard deletion of project record, files, and chat messages after administrative confirmation. |
-| `/admin/projects/{id}` | `div[data-phase2="upload_file"]` | `data-phase2="upload_file"` | Receives uploaded file (Figma, PDF, JSON tokens, ZIP), validates MIME type and 25MB limit, stores to disk under `uploads/projects/{id}/`, and inserts metadata into `project_files`. |
-| `/admin/projects/{id}` | `button[data-phase2="download_file"]` | `data-phase2="download_file"` | Streams project artifact from storage with authenticated access control. |
+| ~~/admin/projects/{id}~~ | ~~`div[data-phase2="upload_file"]`~~ | ~~`data-phase2="upload_file"`~~ | ~~Receives uploaded file (Figma, PDF, JSON tokens, ZIP), validates MIME type and 25MB limit, stores to disk under `uploads/projects/{id}/`, and inserts metadata into `project_files`.~~ **Implemented via `ProjectFileType` and `/admin/projects/{id}/upload-file`** |
+| ~~/admin/projects/{id}~~ | ~~`button[data-phase2="download_file"]`~~ | ~~`data-phase2="download_file"`~~ | ~~Streams project artifact from storage with authenticated access control.~~ **Implemented via `/admin/projects/{id}/files/{fileId}/download` (`BinaryFileResponse`)** |
 | `/admin/projects/{id}` | `button[data-phase2="delete_file"]` | `data-phase2="delete_file"` | Deletes file record from `project_files` and safely unlinks file asset from disk. |
-| `/admin/projects/{id}` | `button[data-phase2="send_message"]` | `data-phase2="send_message"` | Inserts message into `project_messages` (`role = 'designer'`, `sender = 'Kimberly Jayne Antigo'`, `read_at = NULL`), updating unread badges on client topbar. |
+| ~~/admin/projects/{id}~~ | ~~`button[data-phase2="send_message"]`~~ | ~~`data-phase2="send_message"`~~ | ~~Inserts message into `project_messages` (`role = 'designer'`, `sender = 'Kimberly Jayne Antigo'`, `read_at = NULL`), updating unread badges on client topbar.~~ **Implemented via `MessageType` and `/admin/projects/{id}/message`** |
 | `/admin/projects/{id}` | `button[data-phase2="save_notes"]` | `data-phase2="save_notes"` | Updates `internal_notes` column in `projects` table; preserves confidential studio billing and technical notes. |
 
 ---
@@ -38,8 +38,11 @@ This checklist tracks every control and action across **Antigo Advisory WebApp**
 
 | Page | Control / Element | Attribute Value | Intended Database & Backend Behavior |
 |---|---|---|---|
-| `/client/projects/{id}` | `button[data-phase2="send_message"]` | `data-phase2="send_message"` | Inserts client message into `project_messages` (`role = 'client'`, `sender = current_client_name`, `read_at = NULL`), updating unread badge count on admin topbar. |
-| `/client/projects/{id}` | `button[data-phase2="submit_payment"]` | `data-phase2="submit_payment"` | Initiates checkout flow or processes bank wire reference, inserting record into `payments` table with status `'pending'` for admin verification. |
+| ~~/client/projects/{id}~~ | ~~`button[data-phase2="send_message"]`~~ | ~~`data-phase2="send_message"`~~ | ~~Inserts client message into `project_messages` (`role = 'client'`, `sender = current_client_name`, `read_at = NULL`), updating unread badge count on admin topbar.~~ **Implemented via `MessageType` and `/client/projects/{id}/message`** |
+| ~~/client/projects/{id}~~ | ~~`button[data-phase2="submit_payment"]`~~ | ~~`data-phase2="submit_payment"`~~ | ~~Initiates checkout flow or processes bank wire reference, inserting record into `payments` table with status `'pending'` for admin verification.~~ **Implemented via `PaymentType` and `/client/projects/{id}/payment`** |
+| ~~/client/projects/{id}~~ | ~~`button[data-phase2="confirm_remove_client_file"]`~~ | ~~`data-phase2="confirm_remove_client_file"`~~ | **Implemented via `/client/projects/{id}/files/{fileId}/remove-view` (POST with CSRF)** |
+| ~~/client/projects/{id}~~ | ~~`button[data-phase2="confirm_cancel_project"]`~~ | ~~`data-phase2="confirm_cancel_project"`~~ | **Implemented via `CancelProjectType` and `/client/projects/{id}/cancel`** |
+| ~~/client/settings~~ & ~~/admin/settings~~ | ~~Profile & Password Forms~~ | `ProfileType`, `ChangePasswordType` | **Implemented via `ProfileType`, `ChangePasswordType`, and `UserPasswordHasherInterface`** |
 
 ---
 

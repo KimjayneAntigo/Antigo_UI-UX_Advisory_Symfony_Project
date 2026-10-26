@@ -65,7 +65,7 @@ class SmokeTestRepositoriesCommand extends Command
         $io->text(sprintf('findActiveForClient(Ana): Found %d project (%s)', count($active), $active[0]->getProjectCode()));
 
         $cancelled = $this->projectRepository->findCancelled();
-        $io->text(sprintf('findCancelled(): Found %d project (%s)', count($cancelled), $cancelled[0]->getProjectCode()));
+        $io->text(sprintf('findCancelled(): Found %d project(s)%s', count($cancelled), !empty($cancelled) ? ' (' . $cancelled[0]->getProjectCode() . ')' : ''));
 
         $countInDesign = $this->projectRepository->countByStatus(ProjectStatus::IN_DESIGN);
         $io->text(sprintf('countByStatus(IN_DESIGN): %d', $countInDesign));
