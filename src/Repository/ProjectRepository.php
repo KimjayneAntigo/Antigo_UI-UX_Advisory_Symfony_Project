@@ -95,4 +95,19 @@ class ProjectRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function generateNextProjectCode(): string
+    {
+        $maxId = (int) $this->createQueryBuilder('p')
+            ->select('MAX(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $num = $maxId + 3001;
+        while ($this->findOneBy(['project_code' => 'PRJ-' . $num]) !== null) {
+            $num++;
+        }
+
+        return 'PRJ-' . $num;
+    }
 }

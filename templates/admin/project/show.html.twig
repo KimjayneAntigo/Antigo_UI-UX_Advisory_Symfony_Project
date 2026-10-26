@@ -1,0 +1,531 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ project.title }} ({{ project.projectCode }}) &mdash; Studio Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- ================= 0. CANCELLED STATE BANNER ================= -->
+  {% if project.isCancelled %}
+    <div class="p-4 sm:p-5 rounded-3xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-200">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 text-2xl">
+          <iconify-icon icon="lucide:alert-octagon"></iconify-icon>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-sm sm:text-base font-extrabold text-rose-950 dark:text-rose-100">
+              Cancelled on {{ project.cancelledDateFormatted|default(project.cancelledAt ? project.cancelledAt|date('M d, Y') : 'Recently') }} by {{ project.cancelledBy ? project.cancelledBy.name : 'Kimberly Jayne Antigo' }}
+            </h2>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-200/80 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200">
+              Project Terminated
+            </span>
+          </div>
+          <p class="text-xs text-rose-800 dark:text-rose-300 mt-1 leading-relaxed">
+            <span class="font-bold">Reason:</span> {{ project.cancellationReason|default('Client requested project freeze.') }}
+          </p>
+          <p class="text-[11px] text-rose-700/80 dark:text-rose-400/80 mt-1">
+            All modifications, uploads, and communication channels are locked in audit mode. Historical sprint files and messages are preserved below.
+          </p>
+        </div>
+      </div>
+
+      <!-- Delete Permanently CTA (Available only in Cancelled State) -->
+      <div class="flex-shrink-0 self-end md:self-center">
+        <form method="post" action="{{ path('admin_project_delete', {'id': project.id}) }}" onsubmit="return confirm('Permanently delete project {{ project.projectCode }}? This will permanently erase the project record.');">
+          <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ project.id) }}">
+          <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer">
+            <iconify-icon icon="lucide:trash-2" class="text-sm"></iconify-icon>
+            <span>Delete Permanently</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ================= 1. HEADER BAR ================= -->
+  <div class="w-full -mt-2 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[#182859] dark:bg-[#0E1638] text-white border-b border-white/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
+    
+    <!-- Left: Back link & Title Breadcrumb -->
+    <div class="flex items-center gap-3.5 min-w-0">
+      <a href="{{ path('admin_projects') }}"
+         class="flex-shrink-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer"
+         title="Back to Projects Portfolio">
+        <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+      </a>
+
+      <div class="min-w-0">
+        <!-- Breadcrumb: Projects > Title -->
+        <nav class="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-[#DDEBFF]/70">
+          <a href="{{ path('admin_projects') }}" class="hover:underline">Projects</a>
+          <iconify-icon icon="lucide:chevron-right" class="text-[10px]"></iconify-icon>
+          <span class="text-white truncate">{{ project.title }}</span>
+        </nav>
+
+        <div class="flex items-center gap-2.5 mt-0.5 flex-wrap">
+          <h1 class="text-base sm:text-lg font-extrabold text-white truncate max-w-sm sm:max-w-md">
+            {{ project.title }}
+          </h1>
+
+          <!-- Code Badge (e.g. PRJ-3001) -->
+          <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-[#4C6CCB]/30 border border-[#4C6CCB]/40 text-[10px] font-extrabold text-[#DDEBFF] tracking-widest font-mono">
+            {{ project.projectCode }}
+          </span>
+
+          <!-- Status Badge -->
+          {% if project.isCancelled %}
+            <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-rose-500/25 border border-rose-400/40 text-[10px] font-extrabold text-rose-200 uppercase tracking-wider">
+              Cancelled
+            </span>
+          {% elseif project.isCompleted %}
+            <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider">
+              Delivered
+            </span>
+          {% else %}
+            <span class="flex-shrink-0 px-2.5 py-0.5 rounded-full bg-blue-500/25 border border-blue-400/40 text-[10px] font-extrabold text-[#DDEBFF] uppercase tracking-wider">
+              In Progress
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Header Actions (Payment Badge + Edit Button) -->
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-bold text-white/60 hidden sm:inline-block">Payment:</span>
+        {% if project.paymentBadgeType == 'amber' %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold shadow-sm">
+            <iconify-icon icon="lucide:clock-4" class="text-sm"></iconify-icon>
+            <span>{{ project.paymentBadge }}</span>
+          </span>
+        {% elseif project.paymentBadgeType == 'emerald' %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-bold shadow-sm">
+            <iconify-icon icon="lucide:check-circle-2" class="text-sm"></iconify-icon>
+            <span>{{ project.paymentBadge }}</span>
+          </span>
+        {% elseif project.paymentBadgeType == 'blue' %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-200 text-xs font-bold shadow-sm">
+            <iconify-icon icon="lucide:send" class="text-sm"></iconify-icon>
+            <span>{{ project.paymentBadge }}</span>
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white/70 text-xs font-bold">
+            <iconify-icon icon="lucide:receipt" class="text-sm"></iconify-icon>
+            <span>{{ project.paymentBadge }}</span>
+          </span>
+        {% endif %}
+      </div>
+
+      <a href="{{ path('admin_project_edit', {'id': project.id}) }}" 
+         class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
+         title="Edit Project Scope">
+        <iconify-icon icon="lucide:edit-3" class="text-sm"></iconify-icon>
+        <span>Edit Project</span>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ================= 2. MILESTONE STEPPER CONTROL ================= -->
+  <div class="dashboard-card p-6 sm:p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-[#6C5BB5] dark:text-[#DDEBFF]">Milestone Stepper Control</span>
+        <h2 class="text-xl font-extrabold text-[#13224B] dark:text-white mt-0.5">Project Phase &amp; Delivery Status</h2>
+        <p class="text-xs text-[#8890AA] mt-0.5">
+          Controls the live stepper state shown across both Admin and Client portals.
+        </p>
+      </div>
+
+      <!-- Quick Edit Link -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <a href="{{ path('admin_project_edit', {'id': project.id}) }}" 
+           class="px-4 py-2 rounded-xl text-white text-xs font-bold shadow hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer"
+           style="background: linear-gradient(135deg, #4C6CCB, #6C5BB5);">
+          <iconify-icon icon="lucide:sliders" class="text-sm"></iconify-icon>
+          <span>Update Phase in Edit</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Stepper Progress & Delivery Meta -->
+    <div class="flex items-center justify-between text-xs text-[#8890AA] pt-1">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-[#13224B] dark:text-white">Current Phase:</span>
+        <span class="text-[#6C5BB5] dark:text-[#DDEBFF] font-semibold">{{ project.phaseName }}</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs">
+        <iconify-icon icon="lucide:calendar" class="text-[#4C6CCB]"></iconify-icon>
+        <span>Expected Delivery: <strong class="text-[#13224B] dark:text-white">{{ project.expectedDelivery }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Reusable 5-Phase Stepper -->
+    {% include '_partials/project-stepper.html.twig' with {
+      currentPhase: project.currentPhase.value,
+      progressPercent: project.progress,
+      phaseName: project.phaseName,
+      showHeader: true
+    } %}
+  </div>
+
+  <!-- ================= MAIN TWO-COLUMN CONTENT GRID ================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- LEFT COLUMN (Col 1-2): Deliverables & Messages -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- ================= 3. DELIVERABLES & FILES ================= -->
+      <div class="dashboard-card p-6 sm:p-7 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-extrabold text-[#13224B] dark:text-white">Deliverables &amp; Files</h2>
+            <p class="text-xs text-[#8890AA] mt-0.5">
+              {{ project.files|length }} assets shared with client
+            </p>
+          </div>
+          <span class="text-[11px] font-bold text-[#4C6CCB] dark:text-[#DDEBFF] bg-[#DDEBFF]/40 dark:bg-white/5 px-2.5 py-1 rounded-lg">
+            Client View Access
+          </span>
+        </div>
+
+        <!-- Files List or Empty State -->
+        {% if project.files is empty %}
+          <div class="p-8 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.06)] dark:border-white/10 text-center space-y-2">
+            <div class="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-white/10 text-[#8890AA] mx-auto flex items-center justify-center text-2xl">
+              <iconify-icon icon="lucide:folder-open"></iconify-icon>
+            </div>
+            <h4 class="text-xs sm:text-sm font-bold text-[#13224B] dark:text-white">No deliverables uploaded yet</h4>
+            <p class="text-[11px] text-[#8890AA] max-w-sm mx-auto">
+              Upload sprint artifacts to make design tokens, specs, or prototypes available to the client.
+            </p>
+          </div>
+        {% else %}
+          <div class="space-y-3">
+            {% for file in project.files %}
+              <div class="p-4 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.06)] dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:border-[#4C6CCB]/30 transition-all">
+                
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-white dark:bg-white/10 border border-[rgba(19,34,75,0.08)] dark:border-white/10 text-[#4C6CCB] flex items-center justify-center text-xl flex-shrink-0">
+                    <iconify-icon icon="{{ file.icon }}"></iconify-icon>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-xs sm:text-sm font-bold text-[#13224B] dark:text-white truncate">
+                        {{ file.name }}
+                      </h4>
+                      {% if file.removedNotice %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60">
+                          <iconify-icon icon="lucide:eye-off" class="text-xs"></iconify-icon>
+                          <span>{{ file.removedNotice }}</span>
+                        </span>
+                      {% endif %}
+                    </div>
+                    <p class="text-[11px] text-[#8890AA] mt-0.5">
+                      {{ file.sizeFormatted }} &bull; Uploaded {{ file.timeAgo }} &bull; by {{ file.uploadedBy ? file.uploadedBy.name : 'Studio' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- File Actions -->
+                <div class="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+                  <a href="{{ file.filePath|default('#') }}"
+                     download
+                     class="p-2 rounded-xl bg-white dark:bg-white/10 hover:bg-black/5 dark:hover:bg-white/20 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#13224B] dark:text-white text-xs font-bold transition-all cursor-pointer"
+                     title="Download File">
+                    <iconify-icon icon="lucide:download"></iconify-icon>
+                  </a>
+                </div>
+
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ================= 4. MESSAGES PANEL ================= -->
+      <div class="dashboard-card p-6 sm:p-7 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-extrabold text-[#13224B] dark:text-white">Messages &amp; Communications</h2>
+            <p class="text-xs text-[#8890AA] mt-0.5">
+              Direct conversation with {{ project.clientName }}
+            </p>
+          </div>
+          <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Studio Channel</span>
+          </span>
+        </div>
+
+        <!-- Chat Conversation Feed -->
+        <div class="space-y-4 max-h-[360px] overflow-y-auto p-1 pr-2">
+          {% for msg in project.messages %}
+            {% if msg.role.value == 'designer' %}
+              <!-- Designer/Admin Message (Right-aligned with Gradient) -->
+              <div class="flex justify-end">
+                <div class="max-w-md space-y-1">
+                  <div class="p-4 rounded-3xl rounded-br-sm text-white text-xs leading-relaxed shadow-sm"
+                       style="background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);">
+                    {{ msg.message }}
+                  </div>
+                  <div class="text-[10px] text-[#8890AA] text-right font-medium">
+                    {{ msg.senderName }} &bull; {{ msg.time|raw }}
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <!-- Client Message (Left-aligned Light Gray) -->
+              <div class="flex justify-start">
+                <div class="max-w-md space-y-1">
+                  <div class="p-4 rounded-3xl rounded-bl-sm bg-[#F4F6F8] dark:bg-white/10 text-[#13224B] dark:text-white text-xs leading-relaxed border border-[rgba(19,34,75,0.06)] dark:border-white/10 shadow-sm">
+                    {{ msg.message }}
+                  </div>
+                  <div class="text-[10px] text-[#8890AA] font-medium">
+                    {{ msg.senderName }} &bull; {{ msg.time|raw }}
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="p-6 text-center text-xs text-[#8890AA]">
+              No messages posted yet for this project sprint.
+            </div>
+          {% endfor %}
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN (Col 3): Client Card, Project Details Card, Quick Actions Card -->
+    <div class="space-y-6">
+
+      <!-- ================= 5. CLIENT CARD ================= -->
+      <div class="dashboard-card p-6 space-y-4">
+        <h3 class="text-sm font-extrabold text-[#13224B] dark:text-white uppercase tracking-wider">
+          Client Information
+        </h3>
+
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-[#4C6CCB]/15 text-[#4C6CCB] flex items-center justify-center text-base font-extrabold flex-shrink-0 border border-[#4C6CCB]/25">
+            {{ project.avatarInitials }}
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-sm font-extrabold text-[#13224B] dark:text-white truncate">
+              {{ project.clientName }}
+            </h4>
+            <p class="text-xs font-semibold text-[#4C6CCB] truncate">{{ project.company|default('Individual Client') }}</p>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-[rgba(19,34,75,0.06)] dark:border-white/10 space-y-2 text-xs">
+          {% if project.clientEmail %}
+            <div class="flex items-center justify-between text-[#8890AA]">
+              <span>Email</span>
+              <a href="mailto:{{ project.clientEmail }}" class="font-bold text-[#13224B] dark:text-white hover:underline truncate max-w-[170px]">
+                {{ project.clientEmail }}
+              </a>
+            </div>
+          {% endif %}
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[#8890AA]">Account Status</span>
+            {% if project.user %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#DDEBFF] dark:bg-[#4C6CCB]/30 text-[#13224B] dark:text-[#DDEBFF]">
+                <iconify-icon icon="lucide:user-check" class="text-xs text-emerald-600 dark:text-emerald-400"></iconify-icon>
+                <span>Linked Account</span>
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-600">
+                <span>Unlinked</span>
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 6. PROJECT DETAILS CARD ================= -->
+      <div class="dashboard-card p-6 space-y-4">
+        <h3 class="text-sm font-extrabold text-[#13224B] dark:text-white uppercase tracking-wider">
+          Project Details
+        </h3>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Service</span>
+            <span class="font-bold text-[#13224B] dark:text-white text-right">{{ project.category }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Start Date</span>
+            <span class="font-bold text-[#13224B] dark:text-white">{{ project.startDate ? project.startDate|date('M d, Y') : (project.createdAt|date('M d, Y')) }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA]">Expected Delivery</span>
+            <span class="font-bold text-[#13224B] dark:text-white">{{ project.expectedDelivery }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-[#8890AA]">Contract Budget</span>
+            <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">{{ project.formattedBudget }} USD</span>
+          </div>
+        </div>
+
+        {% if project.internalNotes %}
+          <div class="pt-2 border-t border-[rgba(19,34,75,0.06)] dark:border-white/10 space-y-1">
+            <span class="text-[11px] font-bold text-[#8890AA] block uppercase tracking-wider">Internal Notes</span>
+            <p class="text-xs text-[#13224B] dark:text-gray-300 leading-relaxed italic bg-[#F4F6F8] dark:bg-white/5 p-3 rounded-xl border border-[rgba(19,34,75,0.05)] dark:border-white/10">
+              {{ project.internalNotes }}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ================= 7. QUICK ACTIONS CARD ================= -->
+      <div class="dashboard-card p-6 space-y-3.5">
+        <h3 class="text-sm font-extrabold text-[#13224B] dark:text-white uppercase tracking-wider">
+          Quick Actions
+        </h3>
+
+        <!-- Send Invoice Action (POST form with CSRF) -->
+        {% if project.isCompleted and not project.isInvoiced and not project.isCancelled %}
+          <form method="post" action="{{ path('admin_project_send_invoice', {'id': project.id}) }}" onsubmit="return confirm('Send final invoice for project {{ project.projectCode }}?');">
+            <input type="hidden" name="_token" value="{{ csrf_token('send-invoice' ~ project.id) }}">
+            <button type="submit"
+                    class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+              <iconify-icon icon="lucide:receipt" class="text-base"></iconify-icon>
+              <span>Send Invoice</span>
+            </button>
+          </form>
+        {% elseif project.isInvoiced %}
+          <button type="button"
+                  disabled
+                  title="Invoice has already been dispatched for this project"
+                  class="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[#8890AA] text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+            <iconify-icon icon="lucide:check" class="text-emerald-500"></iconify-icon>
+            <span>Invoice Dispatched ({{ project.invoiceSentAt|date('M d, Y') }})</span>
+          </button>
+        {% else %}
+          <button type="button"
+                  disabled
+                  title="Available once the project is marked complete."
+                  class="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500 text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+            <iconify-icon icon="lucide:receipt" class="text-base"></iconify-icon>
+            <span>Send Invoice</span>
+          </button>
+          <p class="text-[10px] text-[#8890AA] text-center -mt-1 italic">
+            Available once the project is marked complete.
+          </p>
+        {% endif %}
+
+        <!-- Mark Complete Action (POST form with CSRF) -->
+        {% if not project.isCompleted and not project.isCancelled %}
+          <form method="post" action="{{ path('admin_project_complete', {'id': project.id}) }}" onsubmit="return confirm('Mark project {{ project.projectCode }} as completed and delivered?');">
+            <input type="hidden" name="_token" value="{{ csrf_token('complete' ~ project.id) }}">
+            <button type="submit"
+                    class="w-full py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <iconify-icon icon="lucide:check-circle-2" class="text-base"></iconify-icon>
+              <span>Mark Complete</span>
+            </button>
+          </form>
+        {% endif %}
+
+        <!-- Cancel Project Action (Opens Modal) -->
+        {% if not project.isCancelled and not project.isCompleted %}
+          <button type="button"
+                  onclick="openCancelProjectModal()"
+                  class="w-full py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 border border-rose-300 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer">
+            <iconify-icon icon="lucide:ban" class="text-base"></iconify-icon>
+            <span>Cancel Project</span>
+          </button>
+        {% elseif project.isCancelled %}
+          <button type="button"
+                  disabled
+                  class="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-400 text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+            <iconify-icon icon="lucide:ban" class="text-base"></iconify-icon>
+            <span>Project Cancelled</span>
+          </button>
+        {% endif %}
+
+        <!-- Delete Project Action (POST with CSRF, allowed only if cancelled) -->
+        <div class="pt-2 border-t border-[rgba(19,34,75,0.06)] dark:border-white/10">
+          {{ include('admin/project/_delete_form.html.twig', {'project': project}) }}
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= CANCEL CONFIRMATION MODAL ================= -->
+{% if not project.isCancelled and not project.isCompleted %}
+  <div id="cancelProjectModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#121A3A] w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      
+      <form method="post" action="{{ path('admin_project_cancel', {'id': project.id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ project.id) }}">
+        
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 flex items-center justify-center text-xl flex-shrink-0">
+              <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+            </div>
+            <div>
+              <h3 class="text-lg font-extrabold text-[#13224B] dark:text-white">Cancel Project Sprint</h3>
+              <p class="text-xs text-[#8890AA] mt-0.5">{{ project.projectCode }} &bull; {{ project.title }}</p>
+            </div>
+          </div>
+          <button type="button" 
+                  onclick="closeCancelProjectModal()" 
+                  class="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 text-[#8890AA] hover:text-black dark:hover:text-white flex items-center justify-center transition-colors">
+            <iconify-icon icon="lucide:x" class="text-base"></iconify-icon>
+          </button>
+        </div>
+
+        <p class="text-xs text-[#4b4b4b] dark:text-gray-300 leading-relaxed mt-4">
+          Cancelling will mark <strong class="text-[#13224B] dark:text-white">{{ project.projectCode }}</strong> as terminated, lock client uploads and communications, and freeze active sprint milestones.
+        </p>
+
+        <div class="space-y-1.5 mt-4">
+          <label for="cancelReasonInput" class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]">
+            Cancellation Reason (optional)
+          </label>
+          <textarea name="cancellation_reason" 
+                    id="cancelReasonInput" 
+                    rows="3" 
+                    placeholder="e.g. Client requested project freeze due to internal corporate restructuring."
+                    class="w-full p-3 rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.12)] dark:border-white/10 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-rose-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-4">
+          <button type="button" 
+                  onclick="closeCancelProjectModal()"
+                  class="px-4 py-2.5 rounded-xl text-xs font-bold text-[#8890AA] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+            Keep Active
+          </button>
+          <button type="submit"
+                  class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow transition-all flex items-center gap-1.5 cursor-pointer">
+            <iconify-icon icon="lucide:ban" class="text-sm"></iconify-icon>
+            <span>Confirm Cancellation</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+{% endif %}
+
+<script>
+  function openCancelProjectModal() {
+    const modal = document.getElementById('cancelProjectModal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeCancelProjectModal() {
+    const modal = document.getElementById('cancelProjectModal');
+    if (modal) modal.classList.add('hidden');
+  }
+</script>
+{% endblock %}

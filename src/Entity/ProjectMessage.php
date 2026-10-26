@@ -122,4 +122,18 @@ class ProjectMessage
     {
         return $this->read_at !== null;
     }
+
+    public function getTime(): string
+    {
+        return $this->created_at->format('M d, Y &bull; h:i A');
+    }
+
+    public function getSenderName(): string
+    {
+        if ($this->sender !== null) {
+            return $this->sender->getName();
+        }
+
+        return $this->role === MessageRole::DESIGNER ? 'Kimberly Jayne Antigo' : 'Client';
+    }
 }

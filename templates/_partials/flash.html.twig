@@ -1,0 +1,49 @@
+{# Reusable Flash Message Toast/Banner Component #}
+{% for label, messages in app.flashes %}
+  {% for message in messages %}
+    {% set isSuccess = label in ['success', 'ok'] %}
+    {% set isError = label in ['error', 'danger'] %}
+    {% set isWarning = label in ['warning', 'warn'] %}
+    {% set isInfo = label in ['info', 'notice'] %}
+
+    <div class="flash-alert mb-4 p-4 rounded-2xl border shadow-sm flex items-start justify-between gap-3 transition-all animate-in fade-in slide-in-from-top-2 duration-200
+      {% if isSuccess %}
+        bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200
+      {% elseif isError %}
+        bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200
+      {% elseif isWarning %}
+        bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200
+      {% else %}
+        bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200
+      {% endif %}
+    " role="alert">
+      <div class="flex items-start gap-3">
+        <div class="text-xl flex-shrink-0 mt-0.5
+          {% if isSuccess %}text-emerald-600 dark:text-emerald-400
+          {% elseif isError %}text-rose-600 dark:text-rose-400
+          {% elseif isWarning %}text-amber-600 dark:text-amber-400
+          {% else %}text-blue-600 dark:text-blue-400{% endif %}">
+          {% if isSuccess %}
+            <iconify-icon icon="lucide:check-circle-2"></iconify-icon>
+          {% elseif isError %}
+            <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+          {% elseif isWarning %}
+            <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+          {% else %}
+            <iconify-icon icon="lucide:info"></iconify-icon>
+          {% endif %}
+        </div>
+        <div class="text-xs sm:text-sm font-semibold leading-relaxed">
+          {{ message }}
+        </div>
+      </div>
+
+      <button type="button" 
+              onclick="this.closest('.flash-alert').remove()" 
+              class="w-6 h-6 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+              aria-label="Dismiss">
+        <iconify-icon icon="lucide:x" class="text-base"></iconify-icon>
+      </button>
+    </div>
+  {% endfor %}
+{% endfor %}

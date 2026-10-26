@@ -1,0 +1,7 @@
+<form method="post" action="{{ path('admin_inquiry_delete', {'id': inquiry.id}) }}" onsubmit="return confirm('Are you sure you want to delete inquiry {{ inquiry.reference }}? This action cannot be undone.');" class="inline-block">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ inquiry.id) }}">
+    <button type="submit" class="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer" title="Delete Inquiry">
+        <iconify-icon icon="lucide:trash-2" class="text-sm"></iconify-icon>
+        <span>Delete</span>
+    </button>
+</form>

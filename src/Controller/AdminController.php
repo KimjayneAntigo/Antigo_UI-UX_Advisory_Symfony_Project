@@ -65,72 +65,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/inquiries', name: 'admin_inquiries')]
-    public function inquiries(): Response
-    {
-        return $this->render('admin/inquiries.html.twig', [
-            'pageTitle' => 'Inquiry Leads Pipeline',
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
-            'stats' => [
-                'total' => 4,
-                'new' => 1,
-                'reviewed' => 1,
-                'contacted' => 1,
-                'converted' => 1
-            ],
-            'inquiries' => [
-                [
-                    'id' => 1,
-                    'ref_code' => 'INQ-8821',
-                    'name' => 'Ana Reyes',
-                    'company' => 'Cebu Tourism Board',
-                    'email' => 'ana@cebutourism.ph',
-                    'service' => 'Web Design & Portal Development',
-                    'budget' => '$45,000',
-                    'status' => 'new',
-                    'created_at' => 'Oct 2, 2026',
-                    'message' => 'Looking for complete UX overhaul of regional tourism portal before Q1 peak.'
-                ],
-                [
-                    'id' => 2,
-                    'ref_code' => 'INQ-8819',
-                    'name' => 'Carlos Gomez',
-                    'company' => 'Fintech Vanguard',
-                    'email' => 'carlos@fintechvanguard.com',
-                    'service' => 'Mobile App UI/UX & Design System',
-                    'budget' => '$80,000',
-                    'status' => 'reviewed',
-                    'created_at' => 'Sep 29, 2026',
-                    'message' => 'Need full cross-platform design system tokens and high-fidelity prototype.'
-                ],
-                [
-                    'id' => 3,
-                    'ref_code' => 'INQ-8814',
-                    'name' => 'Elena Rostova',
-                    'company' => 'Nordic Logistics',
-                    'email' => 'e.rostova@nordiclogistics.se',
-                    'service' => 'Enterprise Dashboard UX Audit',
-                    'budget' => '$35,000',
-                    'status' => 'contacted',
-                    'created_at' => 'Sep 25, 2026',
-                    'message' => 'Consultation requested for optimizing dispatch dispatcher dashboard ergonomics.'
-                ],
-                [
-                    'id' => 4,
-                    'ref_code' => 'INQ-8802',
-                    'name' => 'Maria Santos',
-                    'company' => 'Pesolink Technologies',
-                    'email' => 'maria@pesolink.ph',
-                    'service' => 'Fintech Banking Redesign',
-                    'budget' => '$120,000',
-                    'status' => 'converted',
-                    'created_at' => 'Sep 15, 2026',
-                    'message' => 'Successfully converted to active project PRJ-3001.'
-                ],
-            ]
-        ]);
-    }
+
 
     #[Route('/admin/payments', name: 'admin_payments')]
     public function payments(): Response
@@ -238,68 +173,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/projects', name: 'admin_projects')]
-    public function projects(): Response
-    {
-        return $this->render('admin/projects.html.twig', [
-            'pageTitle' => 'Projects Portfolio',
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
-            'stats' => [
-                'all' => 3,
-                'active' => 1,
-                'review' => 0,
-                'completed' => 1
-            ],
-            'projects' => [
-                [
-                    'id' => 1,
-                    'code' => 'PRJ-3003',
-                    'title' => 'Cebu Tourism Responsive Website',
-                    'client' => 'Ana Reyes',
-                    'company' => 'Cebu Tourism Board',
-                    'service' => 'Web Design & Design Systems',
-                    'stage' => 'UI/UX Design',
-                    'progress' => 60,
-                    'delivery_date' => 'Sep 25, 2026',
-                    'budget' => '$45,000',
-                    'status' => 'active',
-                    'files_count' => 4,
-                    'messages_count' => 3
-                ],
-                [
-                    'id' => 2,
-                    'code' => 'PRJ-3045',
-                    'title' => 'Visayas Health Care – Design Systems',
-                    'client' => 'Dr. Roberto Mendoza',
-                    'company' => 'Visayas Health Care Network',
-                    'service' => 'Design System Architecture',
-                    'stage' => 'Delivered',
-                    'progress' => 100,
-                    'delivery_date' => 'Aug 01, 2026',
-                    'budget' => '$95,000',
-                    'status' => 'completed',
-                    'files_count' => 0,
-                    'messages_count' => 2
-                ],
-                [
-                    'id' => 3,
-                    'code' => 'PRJ-3001',
-                    'title' => 'Pesolink Banking Redesign',
-                    'client' => 'Maria Santos',
-                    'company' => 'Pesolink Technologies',
-                    'service' => 'Fintech Mobile & Web Redesign',
-                    'stage' => 'Wireframing',
-                    'progress' => 40,
-                    'delivery_date' => 'Nov 15, 2026',
-                    'budget' => '$120,000',
-                    'status' => 'cancelled',
-                    'files_count' => 2,
-                    'messages_count' => 2
-                ],
-            ]
-        ]);
-    }
+
 
     #[Route('/admin/clients', name: 'admin_clients')]
     public function clients(): Response
@@ -365,25 +239,5 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/projects/{id}', name: 'admin_project_detail')]
-    public function projectDetail(string $id): Response
-    {
-        $project = MockProjects::getById($id);
 
-        if (!$project) {
-            return $this->render('error/404.html.twig', [
-                'pageTitle' => 'Project Not Found',
-                'requestedId' => $id,
-                'inquiriesPendingCount' => 1,
-                'paymentsPendingCount' => 2,
-            ], new Response('', Response::HTTP_NOT_FOUND));
-        }
-
-        return $this->render('admin/project_detail.html.twig', [
-            'pageTitle' => $project['title'] . ' (' . $project['code'] . ') — Studio Admin',
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
-            'project' => $project,
-        ]);
-    }
 }

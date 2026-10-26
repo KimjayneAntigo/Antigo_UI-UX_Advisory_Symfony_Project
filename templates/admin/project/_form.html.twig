@@ -1,0 +1,149 @@
+{{ form_start(form, {'attr': {'class': 'space-y-6', 'novalidate': 'novalidate'}}) }}
+
+  {# Global form errors if any #}
+  {% if not form.vars.valid and form.vars.errors|length > 0 %}
+    <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs font-semibold space-y-1">
+      {{ form_errors(form) }}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    
+    {# 1. Title #}
+    <div class="md:col-span-2 space-y-1.5">
+      {{ form_label(form.title, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.title, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.title.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.title.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.title) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 2. Category / Service #}
+    <div class="space-y-1.5">
+      {{ form_label(form.category, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.category, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.category.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.category.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.category) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 3. Budget #}
+    <div class="space-y-1.5">
+      {{ form_label(form.budget, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      <div class="relative">
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8890AA]">$</span>
+        {{ form_widget(form.budget, {'attr': {'class': 'w-full pl-8 pr-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.budget.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      </div>
+      {% if not form.budget.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.budget) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 4. Client Name #}
+    <div class="space-y-1.5">
+      {{ form_label(form.clientName, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.clientName, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.clientName.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.clientName.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.clientName) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 5. Client Email #}
+    <div class="space-y-1.5">
+      {{ form_label(form.clientEmail, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.clientEmail, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.clientEmail.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.clientEmail.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.clientEmail) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 6. Company #}
+    <div class="space-y-1.5">
+      {{ form_label(form.company, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.company, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.company.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.company.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.company) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 7. Assigned Client Account #}
+    <div class="space-y-1.5">
+      {{ form_label(form.user, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.user, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.user.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.user.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.user) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 8. Start Date #}
+    <div class="space-y-1.5">
+      {{ form_label(form.startDate, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.startDate, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.startDate.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.startDate.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.startDate) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 9. Due Date #}
+    <div class="space-y-1.5">
+      {{ form_label(form.dueDate, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.dueDate, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.dueDate.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.dueDate.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.dueDate) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 10. Phase #}
+    <div class="md:col-span-2 space-y-1.5">
+      {{ form_label(form.currentPhase, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.currentPhase, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.currentPhase.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.currentPhase.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.currentPhase) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 11. Internal Notes #}
+    <div class="md:col-span-2 space-y-1.5">
+      {{ form_label(form.internalNotes, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+      {{ form_widget(form.internalNotes, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 bg-[#F4F6F8] dark:bg-[#0E1638] text-xs font-semibold text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] transition-all' ~ (form.internalNotes.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+      {% if not form.internalNotes.vars.valid %}
+        <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+          {{ form_errors(form.internalNotes) }}
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {# Form Actions #}
+  <div class="flex items-center justify-end gap-3 pt-4 border-t border-[rgba(19,34,75,0.08)] dark:border-white/10">
+    <a href="{{ path('admin_projects') }}" class="px-4 py-2.5 rounded-xl border border-[rgba(19,34,75,0.12)] dark:border-white/15 text-xs font-bold text-[#8890AA] hover:text-[#13224B] dark:hover:text-white transition-colors">
+      Cancel
+    </a>
+    <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2 cursor-pointer">
+      <iconify-icon icon="lucide:check" class="text-sm"></iconify-icon>
+      <span>{{ button_label|default('Save Project') }}</span>
+    </button>
+  </div>
+
+{{ form_end(form) }}

@@ -1,0 +1,228 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Projects Portfolio — Studio Admin | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-[#13224B] dark:text-white tracking-tight">Projects Portfolio &amp; Sprints</h1>
+      <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Oversee active design sprints, track deliverable milestones, and manage project lifecycles.</p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <a href="{{ path('admin_project_new') }}" 
+         class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2 cursor-pointer">
+        <iconify-icon icon="lucide:folder-plus"></iconify-icon>
+        <span>New Project</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="flex items-center gap-2 flex-wrap" id="projectFilterTabs">
+    <button type="button"
+            onclick="filterProjects('all')"
+            data-filter="all"
+            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
+      All ({{ stats.all|default(0) }})
+    </button>
+    <button type="button"
+            onclick="filterProjects('active')"
+            data-filter="active"
+            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+      Active ({{ stats.active|default(0) }})
+    </button>
+    <button type="button"
+            onclick="filterProjects('review')"
+            data-filter="review"
+            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+      Review ({{ stats.review|default(0) }})
+    </button>
+    <button type="button"
+            onclick="filterProjects('completed')"
+            data-filter="completed"
+            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+      Completed ({{ stats.completed|default(0) }})
+    </button>
+  </div>
+
+  {# Featured Spotlight Card (If active projects exist) #}
+  {% if featuredProject is not null %}
+    <div class="bg-white dark:bg-[#121B42] rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs font-bold text-[#6C5BB5] dark:text-[#DDEBFF]">{{ featuredProject.projectCode }}</span>
+            <span class="text-xs text-[#8890AA]">&bull;</span>
+            <span class="text-xs text-[#8890AA]">Featured Active Sprint</span>
+          </div>
+          <h2 class="text-xl font-extrabold text-[#13224B] dark:text-white mt-0.5">
+            <a href="{{ path('admin_project_detail', {'id': featuredProject.id}) }}" class="hover:text-[#4C6CCB] transition-colors">
+              {{ featuredProject.title }}
+            </a>
+          </h2>
+          <p class="text-xs text-[#8890AA] mt-0.5">
+            Client: {{ featuredProject.clientName }}{% if featuredProject.company %} &bull; {{ featuredProject.company }}{% endif %} &bull; {{ featuredProject.category }}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          {% if featuredProject.isCompleted and not featuredProject.isInvoiced %}
+            <form method="post" action="{{ path('admin_project_send_invoice', {'id': featuredProject.id}) }}" class="inline">
+              <input type="hidden" name="_token" value="{{ csrf_token('send-invoice' ~ featuredProject.id) }}">
+              <button type="submit" class="px-4 py-2 rounded-xl border border-[rgba(19,34,75,0.15)] text-[#13224B] dark:text-white hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-xs font-bold transition-all cursor-pointer">
+                Send Invoice
+              </button>
+            </form>
+          {% endif %}
+
+          {% if not featuredProject.isCompleted and not featuredProject.isCancelled %}
+            <form method="post" action="{{ path('admin_project_complete', {'id': featuredProject.id}) }}" class="inline">
+              <input type="hidden" name="_token" value="{{ csrf_token('complete' ~ featuredProject.id) }}">
+              <button type="submit" class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-md transition-all cursor-pointer">
+                Mark Complete
+              </button>
+            </form>
+          {% endif %}
+
+          <a href="{{ path('admin_project_detail', {'id': featuredProject.id}) }}" class="px-4 py-2 rounded-xl border border-[rgba(19,34,75,0.15)] dark:border-white/15 text-[#13224B] dark:text-white hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-xs font-bold transition-all">
+            Open Sprint &rarr;
+          </a>
+        </div>
+      </div>
+
+      <!-- Stage and Progress bar -->
+      <div class="p-4 rounded-2xl bg-[#F4F6F8] dark:bg-[#0E1638] border border-[rgba(19,34,75,0.05)] dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-bold text-[#8890AA] uppercase tracking-wider">Stage</span>
+          <span class="px-3 py-1 rounded-xl bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-xs font-bold text-[#13224B] dark:text-white shadow-sm">
+            {{ featuredProject.currentPhase.status() }}
+          </span>
+        </div>
+
+        <div class="flex-1 max-w-lg mx-auto w-full space-y-1">
+          <div class="w-full h-2.5 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+            <div class="h-full rounded-full bg-gradient-to-r from-[#4C6CCB] to-[#6C5BB5]" style="width: {{ featuredProject.progress }}%;"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 text-xs">
+          <span class="font-extrabold text-[#13224B] dark:text-white">{{ featuredProject.progress }}%</span>
+          <span class="text-[#8890AA]">Expected delivery: {{ featuredProject.expectedDelivery }}</span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Projects Table Card -->
+  <div class="bg-white dark:bg-[#121B42] rounded-3xl border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] dark:border-white/10 text-[#8890AA] uppercase tracking-wider font-bold">
+          <tr>
+            <th class="py-4 px-6">Project Code &amp; Title</th>
+            <th class="py-4 px-6">Client &amp; Service</th>
+            <th class="py-4 px-6">Stage &amp; Progress</th>
+            <th class="py-4 px-6">Budget ($ USD)</th>
+            <th class="py-4 px-6">Target Delivery</th>
+            <th class="py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[rgba(19,34,75,0.05)] dark:divide-white/5">
+          {% for p in projects %}
+            {% set rowFilter = p.isCompleted ? 'completed' : (p.isCancelled ? 'cancelled' : (p.currentPhase.value == 4 ? 'review' : 'active')) %}
+            <tr class="project-row hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors" data-status="{{ rowFilter }}">
+              <td class="py-4 px-6">
+                <span class="font-mono text-xs font-bold text-[#6C5BB5] dark:text-[#DDEBFF] block">{{ p.projectCode }}</span>
+                <a href="{{ path('admin_project_detail', {'id': p.id}) }}" class="font-bold text-[#13224B] dark:text-white hover:text-[#4C6CCB] text-sm hover:underline">
+                  {{ p.title }}
+                </a>
+                <span class="text-[11px] text-[#8890AA] block mt-0.5">
+                  {{ p.filesCount }} files &bull; {{ p.messagesCount }} messages
+                  {% if p.isCancelled %}
+                    &bull; <span class="text-rose-600 font-bold">Cancelled</span>
+                  {% elseif p.isCompleted %}
+                    &bull; <span class="text-emerald-600 font-bold">Delivered</span>
+                  {% endif %}
+                </span>
+              </td>
+              <td class="py-4 px-6">
+                <span class="font-semibold text-[#13224B] dark:text-white block">{{ p.clientName }}{% if p.company %} ({{ p.company }}){% endif %}</span>
+                <span class="text-[11px] text-[#8890AA]">{{ p.category }}</span>
+              </td>
+              <td class="py-4 px-6 min-w-[180px]">
+                <div class="flex items-center justify-between text-[11px] font-semibold mb-1">
+                  <span class="text-[#13224B] dark:text-white">{{ p.currentPhase.label() }}</span>
+                  <span class="text-[#4C6CCB] dark:text-[#DDEBFF] font-bold">{{ p.progress }}%</span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-[#4C6CCB] to-[#6C5BB5]" style="width: {{ p.progress }}%;"></div>
+                </div>
+              </td>
+              <td class="py-4 px-6 font-mono text-sm font-extrabold text-[#13224B] dark:text-white">
+                {{ p.formattedBudget }}
+              </td>
+              <td class="py-4 px-6 text-[#8890AA] font-medium">
+                {{ p.expectedDelivery }}
+              </td>
+              <td class="py-4 px-6 text-right">
+                <div class="inline-flex items-center gap-1.5">
+                  <a href="{{ path('admin_project_detail', {'id': p.id}) }}" 
+                     class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-[#13224B] dark:text-white text-xs font-semibold transition-colors">
+                    Details &rarr;
+                  </a>
+                  <a href="{{ path('admin_project_edit', {'id': p.id}) }}" 
+                     class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-[#13224B] dark:text-white text-xs font-semibold transition-colors"
+                     title="Edit Project">
+                    Edit
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" class="py-12 text-center text-[#8890AA]">
+                <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 text-[#8890AA] mx-auto flex items-center justify-center text-2xl mb-2">
+                  <iconify-icon icon="lucide:folder-kanban"></iconify-icon>
+                </div>
+                <p class="font-bold text-sm text-[#13224B] dark:text-white">No projects found</p>
+                <p class="text-xs mt-1">Create your first client project sprint above.</p>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function filterProjects(filter) {
+    const rows = document.querySelectorAll('.project-row');
+    rows.forEach(row => {
+      const status = row.dataset.status;
+      if (filter === 'all') {
+        row.style.display = '';
+      } else if (filter === 'active') {
+        row.style.display = (status === 'active' || status === 'review') ? '' : 'none';
+      } else if (filter === 'review') {
+        row.style.display = (status === 'review') ? '' : 'none';
+      } else if (filter === 'completed') {
+        row.style.display = (status === 'completed') ? '' : 'none';
+      }
+    });
+
+    document.querySelectorAll('.project-filter-btn').forEach(btn => {
+      if (btn.dataset.filter === filter) {
+        btn.className = 'project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all';
+      } else {
+        btn.className = 'project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all';
+      }
+    });
+  }
+</script>
+{% endblock %}

@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\Table(name: 'projects')]
@@ -27,33 +28,46 @@ class Project
     private ?User $user = null;
 
     #[ORM\Column(length: 20, unique: true)]
-    private string $project_code;
+    private ?string $project_code = null;
 
     #[ORM\Column(length: 200)]
-    private string $title;
+    #[Assert\NotBlank(message: 'Please enter a project title.')]
+    #[Assert\Length(max: 200, maxMessage: 'Project title cannot exceed {{ limit }} characters.')]
+    private ?string $title = null;
 
     #[ORM\Column(length: 100)]
-    private string $category;
+    #[Assert\NotBlank(message: 'Please specify a category / service.')]
+    #[Assert\Length(max: 100, maxMessage: 'Category cannot exceed {{ limit }} characters.')]
+    private ?string $category = null;
 
     #[ORM\Column(length: 120)]
-    private string $client_name;
+    #[Assert\NotBlank(message: 'Please enter the client name.')]
+    #[Assert\Length(max: 120, maxMessage: 'Client name cannot exceed {{ limit }} characters.')]
+    private ?string $client_name = null;
 
     #[ORM\Column(length: 180, nullable: true)]
+    #[Assert\Email(message: 'Please enter a valid client email address.')]
+    #[Assert\Length(max: 180, maxMessage: 'Client email cannot exceed {{ limit }} characters.')]
     private ?string $client_email = null;
 
     #[ORM\Column(length: 120, nullable: true)]
+    #[Assert\Length(max: 120, maxMessage: 'Company name cannot exceed {{ limit }} characters.')]
     private ?string $company = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
-    private string $budget;
+    #[Assert\NotBlank(message: 'Please enter a budget amount.')]
+    #[Assert\Positive(message: 'Budget must be greater than zero.')]
+    private ?string $budget = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $start_date = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    private \DateTimeImmutable $due_date;
+    #[Assert\NotNull(message: 'Please select a target delivery / due date.')]
+    private ?\DateTimeImmutable $due_date = null;
 
     #[ORM\Column(enumType: ProjectPhase::class)]
+    #[Assert\NotNull(message: 'Please select a project phase.')]
     private ProjectPhase $current_phase = ProjectPhase::DISCOVERY;
 
     #[ORM\Column(enumType: ProjectStatus::class)]
@@ -131,48 +145,58 @@ class Project
         return $this;
     }
 
-    public function getProjectCode(): string
+    public function getProjectCode(): ?string
     {
         return $this->project_code;
     }
 
-    public function setProjectCode(string $projectCode): static
+    public function setProjectCode(?string $projectCode): static
     {
         $this->project_code = $projectCode;
 
         return $this;
     }
 
-    public function getTitle(): string
+    public function getCode(): string
+    {
+        return $this->project_code ?? '';
+    }
+
+    public function getTitle(): ?string
     {
         return $this->title;
     }
 
-    public function setTitle(string $title): static
+    public function setTitle(?string $title): static
     {
         $this->title = $title;
 
         return $this;
     }
 
-    public function getCategory(): string
+    public function getCategory(): ?string
     {
         return $this->category;
     }
 
-    public function setCategory(string $category): static
+    public function setCategory(?string $category): static
     {
         $this->category = $category;
 
         return $this;
     }
 
-    public function getClientName(): string
+    public function getService(): string
+    {
+        return $this->category ?? '';
+    }
+
+    public function getClientName(): ?string
     {
         return $this->client_name;
     }
 
-    public function setClientName(string $clientName): static
+    public function setClientName(?string $clientName): static
     {
         $this->client_name = $clientName;
 
@@ -203,16 +227,21 @@ class Project
         return $this;
     }
 
-    public function getBudget(): string
+    public function getBudget(): ?string
     {
         return $this->budget;
     }
 
-    public function setBudget(string $budget): static
+    public function setBudget(?string $budget): static
     {
         $this->budget = $budget;
 
         return $this;
+    }
+
+    public function getFormattedBudget(): string
+    {
+        return '$' . number_format((float) ($this->budget ?? 0), 0);
     }
 
     public function getStartDate(): ?\DateTimeImmutable
@@ -232,16 +261,21 @@ class Project
         return $this->start_date ?? $this->created_at;
     }
 
-    public function getDueDate(): \DateTimeImmutable
+    public function getDueDate(): ?\DateTimeImmutable
     {
         return $this->due_date;
     }
 
-    public function setDueDate(\DateTimeImmutable $dueDate): static
+    public function setDueDate(?\DateTimeImmutable $dueDate): static
     {
         $this->due_date = $dueDate;
 
         return $this;
+    }
+
+    public function getExpectedDelivery(): string
+    {
+        return $this->due_date ? $this->due_date->format('M d, Y') : '';
     }
 
     public function getCurrentPhase(): ProjectPhase
@@ -249,9 +283,11 @@ class Project
         return $this->current_phase;
     }
 
-    public function setCurrentPhase(ProjectPhase $currentPhase): static
+    public function setCurrentPhase(?ProjectPhase $currentPhase): static
     {
-        $this->current_phase = $currentPhase;
+        if ($currentPhase !== null) {
+            $this->current_phase = $currentPhase;
+        }
 
         return $this;
     }
@@ -259,6 +295,67 @@ class Project
     public function getPhase(): ProjectPhase
     {
         return $this->current_phase;
+    }
+
+    public function getPhaseName(): string
+    {
+        return $this->current_phase->label();
+    }
+
+    public function getIsCancelled(): bool
+    {
+        return $this->isCancelled();
+    }
+
+    public function getAvatarInitials(): string
+    {
+        $name = trim($this->client_name ?? 'CL');
+        $parts = explode(' ', $name);
+        if (count($parts) >= 2) {
+            return strtoupper(substr($parts[0], 0, 1) . substr($parts[1], 0, 1));
+        }
+
+        return strtoupper(substr($name, 0, 2));
+    }
+
+    public function getPaymentBadge(): string
+    {
+        foreach ($this->payments as $payment) {
+            if ($payment->getStatus() === \App\Enum\PaymentStatus::VERIFIED) {
+                return 'Paid in Full';
+            }
+        }
+
+        if ($this->invoice_sent_at !== null) {
+            return 'Invoice Sent';
+        }
+
+        return 'Pending Deposit';
+    }
+
+    public function getPaymentBadgeType(): string
+    {
+        foreach ($this->payments as $payment) {
+            if ($payment->getStatus() === \App\Enum\PaymentStatus::VERIFIED) {
+                return 'emerald';
+            }
+        }
+
+        if ($this->invoice_sent_at !== null) {
+            return 'blue';
+        }
+
+        return 'amber';
+    }
+
+    public function getFilesCount(): int
+    {
+        return $this->files->count();
+    }
+
+    public function getMessagesCount(): int
+    {
+        return $this->messages->count();
     }
 
     public function getProgress(): int
@@ -296,6 +393,11 @@ class Project
     public function getCancelledAt(): ?\DateTimeImmutable
     {
         return $this->cancelled_at;
+    }
+
+    public function getCancelledDateFormatted(): ?string
+    {
+        return $this->cancelled_at ? $this->cancelled_at->format('M d, Y') : null;
     }
 
     public function setCancelledAt(?\DateTimeImmutable $cancelledAt): static

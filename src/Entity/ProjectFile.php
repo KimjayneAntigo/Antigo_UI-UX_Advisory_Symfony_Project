@@ -136,4 +136,41 @@ class ProjectFile
     {
         return $this->deleted_by_client_at === null;
     }
+
+    public function getSizeFormatted(): string
+    {
+        if ($this->size_bytes >= 1048576) {
+            return number_format($this->size_bytes / 1048576, 1) . ' MB';
+        }
+
+        return number_format($this->size_bytes / 1024, 0) . ' KB';
+    }
+
+    public function getTimeAgo(): string
+    {
+        return $this->uploaded_at->format('M d, Y');
+    }
+
+    public function getRemovedNotice(): ?string
+    {
+        if ($this->deleted_by_client_at !== null) {
+            return 'Removed from client view on ' . $this->deleted_by_client_at->format('M d, Y');
+        }
+
+        return null;
+    }
+
+    public function getIcon(): string
+    {
+        $ext = strtolower(pathinfo($this->name, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'pdf' => 'lucide:file-text',
+            'fig', 'figma' => 'lucide:figma',
+            'json' => 'lucide:code-2',
+            'zip', 'rar' => 'lucide:archive',
+            'png', 'jpg', 'jpeg', 'svg', 'webp' => 'lucide:image',
+            default => 'lucide:file-text',
+        };
+    }
 }

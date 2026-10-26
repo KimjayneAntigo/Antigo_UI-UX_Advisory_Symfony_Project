@@ -48,9 +48,9 @@
 
       <!-- 2. Inquiries -->
       <a href="{{ path('admin_inquiries') }}" 
-         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_inquiries' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute starts with 'admin_inquir' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
         <div class="flex items-center gap-3">
-          <iconify-icon icon="lucide:inbox" class="text-lg {{ currentRoute == 'admin_inquiries' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <iconify-icon icon="lucide:inbox" class="text-lg {{ currentRoute starts with 'admin_inquir' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
           <span>Inquiries</span>
         </div>
         {% if inquiriesBadge > 0 %}
@@ -85,9 +85,9 @@
 
       <!-- 5. Projects -->
       <a href="{{ path('admin_projects') }}" 
-         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute == 'admin_projects' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
+         class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group {{ currentRoute starts with 'admin_project' ? 'bg-white/15 text-white shadow-sm' : 'text-[#A5B3D8] hover:text-white hover:bg-white/5' }}">
         <div class="flex items-center gap-3">
-          <iconify-icon icon="lucide:folder-kanban" class="text-lg {{ currentRoute == 'admin_projects' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
+          <iconify-icon icon="lucide:folder-kanban" class="text-lg {{ currentRoute starts with 'admin_project' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
           <span>Projects</span>
         </div>
       </a>

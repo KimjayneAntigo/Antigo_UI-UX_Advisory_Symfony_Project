@@ -30,6 +30,15 @@ final class ProjectPhases
     }
 
     /**
+     * Alias for getAll() for flexible calling.
+     * @return array<int, array{number: int, name: string, progress: int, status: string, desc: string}>
+     */
+    public static function all(): array
+    {
+        return self::getAll();
+    }
+
+    /**
      * @return array{number: int, name: string, progress: int, status: string, desc: string}
      */
     public static function getPhase(int $phaseNumber): array

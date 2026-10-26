@@ -1,0 +1,134 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ inquiry.reference }} — {{ inquiry.name }} | Studio Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+  <!-- Header & Back Navigation -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <a href="{{ path('admin_inquiries') }}" 
+         class="w-9 h-9 rounded-full bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.1)] dark:border-white/10 flex items-center justify-center text-[#13224B] dark:text-white hover:bg-[#F4F6F8] transition-colors"
+         title="Back to Inquiries">
+        <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+      </a>
+      <div>
+        <nav class="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-[#8890AA]">
+          <a href="{{ path('admin_inquiries') }}" class="hover:underline">Inquiries</a>
+          <iconify-icon icon="lucide:chevron-right" class="text-[10px]"></iconify-icon>
+          <span class="text-[#13224B] dark:text-white">{{ inquiry.reference }}</span>
+        </nav>
+        <div class="flex items-center gap-2.5 mt-0.5">
+          <h1 class="text-xl sm:text-2xl font-extrabold text-[#13224B] dark:text-white tracking-tight">
+            {{ inquiry.name }}
+          </h1>
+          <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#13224B]/10 dark:bg-white/10 text-[#13224B] dark:text-[#DDEBFF]">
+            {{ inquiry.reference }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <a href="{{ path('admin_inquiry_edit', {'id': inquiry.id}) }}" 
+         class="px-4 py-2 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5">
+        <iconify-icon icon="lucide:edit-3" class="text-sm"></iconify-icon>
+        <span>Edit Lead</span>
+      </a>
+      {{ include('admin/inquiry/_delete_form.html.twig', {'inquiry': inquiry}) }}
+    </div>
+  </div>
+
+  <!-- Lead Details Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- Primary Info Card -->
+    <div class="md:col-span-2 bg-white dark:bg-[#121B42] rounded-3xl p-6 sm:p-7 border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm space-y-6">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-[#6C5BB5] dark:text-[#DDEBFF]">Inquiry Requirements</span>
+        <h2 class="text-lg font-extrabold text-[#13224B] dark:text-white mt-0.5">{{ inquiry.service }}</h2>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-[#8890AA] block uppercase tracking-wider">Project Description / Brief</label>
+        <div class="p-4 rounded-2xl bg-[#F4F6F8] dark:bg-[#0E1638] border border-[rgba(19,34,75,0.06)] dark:border-white/10 text-xs sm:text-sm text-[#13224B] dark:text-gray-200 leading-relaxed whitespace-pre-line">
+          {{ inquiry.description }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 pt-2 border-t border-[rgba(19,34,75,0.06)] dark:border-white/10">
+        <div>
+          <span class="text-xs text-[#8890AA] block">Estimated Budget</span>
+          <span class="text-base font-extrabold text-[#13224B] dark:text-white font-mono mt-0.5 block">
+            {{ inquiry.budget }}
+          </span>
+        </div>
+        <div>
+          <span class="text-xs text-[#8890AA] block">Target Timeline</span>
+          <span class="text-sm font-bold text-[#13224B] dark:text-white mt-0.5 block">
+            {{ inquiry.timeline }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact & Meta Sidebar Card -->
+    <div class="space-y-6">
+      <div class="bg-white dark:bg-[#121B42] rounded-3xl p-6 border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm space-y-5">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-[#8890AA]">Contact Details</h3>
+        
+        <div class="space-y-3.5 text-xs">
+          <div>
+            <span class="text-[#8890AA] block">Company</span>
+            <span class="font-bold text-[#13224B] dark:text-white text-sm mt-0.5 block">
+              {{ inquiry.company|default('Individual / Not Specified') }}
+            </span>
+          </div>
+
+          <div>
+            <span class="text-[#8890AA] block">Email</span>
+            <a href="mailto:{{ inquiry.email }}" class="font-semibold text-[#4C6CCB] dark:text-[#DDEBFF] hover:underline mt-0.5 block font-mono">
+              {{ inquiry.email }}
+            </a>
+          </div>
+
+          <div>
+            <span class="text-[#8890AA] block">Phone</span>
+            <span class="font-medium text-[#13224B] dark:text-gray-300 mt-0.5 block">
+              {{ inquiry.phone|default('Not provided') }}
+            </span>
+          </div>
+
+          <div class="pt-2 border-t border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            <span class="text-[#8890AA] block">Lead Status</span>
+            <div class="mt-1">
+              {% if inquiry.status.value == 'new' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#FFF1D6] text-[#946200]">New Lead</span>
+              {% elseif inquiry.status.value == 'reviewed' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[rgba(108,91,181,0.14)] text-[#6C5BB5]">Reviewed</span>
+              {% elseif inquiry.status.value == 'contacted' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#DDEBFF] text-[#13224B]">Contacted</span>
+              {% elseif inquiry.status.value == 'converted' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#DFF6E8] text-[#127A45]">Converted to Project</span>
+              {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">{{ inquiry.status.value|capitalize }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <span class="text-[#8890AA] block">Received On</span>
+            <span class="font-medium text-[#13224B] dark:text-gray-300 mt-0.5 block">
+              {{ inquiry.createdAt|date('F d, Y — h:i A') }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

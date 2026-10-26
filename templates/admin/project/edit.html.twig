@@ -1,0 +1,46 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit {{ project.projectCode }} — Studio Admin | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+  <!-- Breadcrumb & Header -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <a href="{{ path('admin_project_detail', {'id': project.id}) }}" 
+         class="w-9 h-9 rounded-full bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.1)] dark:border-white/10 flex items-center justify-center text-[#13224B] dark:text-white hover:bg-[#F4F6F8] transition-colors"
+         title="Back to Project Details">
+        <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+      </a>
+      <div>
+        <nav class="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-[#8890AA]">
+          <a href="{{ path('admin_projects') }}" class="hover:underline">Projects</a>
+          <iconify-icon icon="lucide:chevron-right" class="text-[10px]"></iconify-icon>
+          <a href="{{ path('admin_project_detail', {'id': project.id}) }}" class="hover:underline">{{ project.projectCode }}</a>
+          <iconify-icon icon="lucide:chevron-right" class="text-[10px]"></iconify-icon>
+          <span class="text-[#13224B] dark:text-white">Edit</span>
+        </nav>
+        <h1 class="text-xl sm:text-2xl font-extrabold text-[#13224B] dark:text-white tracking-tight mt-0.5">
+          Edit {{ project.projectCode }}: {{ project.title }}
+        </h1>
+      </div>
+    </div>
+
+    <div>
+      {{ include('admin/project/_delete_form.html.twig', {'project': project}) }}
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="bg-white dark:bg-[#121B42] rounded-3xl p-6 sm:p-8 border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm space-y-6">
+    <div>
+      <h2 class="text-base font-extrabold text-[#13224B] dark:text-white">Update Sprint Details</h2>
+      <p class="text-xs text-[#8890AA] mt-0.5">Modify scope parameters, delivery dates, budget, milestone phases, or assigned client.</p>
+    </div>
+
+    {{ include('admin/project/_form.html.twig', {'button_label': 'Update Project'}) }}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+<form method="post" action="{{ path('admin_project_delete', {'id': project.id}) }}" onsubmit="return confirm('Are you sure you want to permanently delete project {{ project.projectCode }}? This will permanently delete all associated project records.');" class="inline-block">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ project.id) }}">
+    {% if project.isCancelled %}
+        <button type="submit" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all inline-flex items-center gap-1.5 cursor-pointer" title="Delete Project">
+            <iconify-icon icon="lucide:trash-2" class="text-sm"></iconify-icon>
+            <span>Delete Permanently</span>
+        </button>
+    {% else %}
+        <button type="button" disabled class="px-3.5 py-2 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500 text-xs font-bold inline-flex items-center gap-1.5 cursor-not-allowed" title="Projects must be cancelled first before they can be deleted.">
+            <iconify-icon icon="lucide:trash-2" class="text-sm"></iconify-icon>
+            <span>Delete (Locked)</span>
+        </button>
+    {% endif %}
+</form>
