@@ -4,19 +4,26 @@ namespace App\Controller\Admin;
 
 use App\Config\ProjectPhases;
 use App\Entity\Project;
+use App\Entity\ProjectFile;
 use App\Entity\ProjectMessage;
 use App\Enum\MessageRole;
 use App\Enum\ProjectPhase;
 use App\Enum\ProjectStatus;
 use App\Form\MessageType;
+use App\Form\ProjectFileType;
 use App\Form\ProjectType;
+use App\Repository\ProjectFileRepository;
 use App\Repository\ProjectRepository;
 use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/admin/projects')]
 final class ProjectController extends AbstractController
@@ -105,6 +112,7 @@ final class ProjectController extends AbstractController
     public function show(Project $project): Response
     {
         $messageForm = $this->createForm(MessageType::class);
+        $fileUploadForm = $this->createForm(ProjectFileType::class);
 
         // Renders the rich Antigo project detail view with real Project entity
         return $this->render('admin/project/show.html.twig', [
@@ -112,6 +120,7 @@ final class ProjectController extends AbstractController
             'project' => $project,
             'project_phases' => ProjectPhases::getAll(),
             'messageForm' => $messageForm->createView(),
+            'fileUploadForm' => $fileUploadForm->createView(),
             'inquiriesPendingCount' => 1,
             'paymentsPendingCount' => 2,
         ]);
@@ -149,6 +158,97 @@ final class ProjectController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    // Beyond the lesson: Secure project file upload
+    #[Route('/{id}/upload-file', name: 'admin_project_file_upload', methods: ['POST'])]
+    public function uploadFile(
+        Request $request,
+        Project $project,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider,
+        SluggerInterface $slugger
+    ): Response {
+        // Beyond the lesson: None of these actions work on a cancelled project
+        if ($project->isCancelled()) {
+            $this->addFlash('error', 'Deliverable uploads are locked for cancelled sprint records.');
+            return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        $form = $this->createForm(ProjectFileType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var UploadedFile $uploadedFile */
+            $uploadedFile = $form->get('deliverable')->getData();
+            if ($uploadedFile) {
+                $originalName = $uploadedFile->getClientOriginalName();
+                $originalFilename = pathinfo($originalName, PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $extension = $uploadedFile->guessExtension() ?: pathinfo($originalName, PATHINFO_EXTENSION);
+                $newFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
+
+                // Beyond the lesson: Save files in var/uploads/projects/{id}/, not under public/
+                $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/var/uploads/projects/' . $project->getId();
+                if (!is_dir($uploadsDirectory)) {
+                    mkdir($uploadsDirectory, 0777, true);
+                }
+
+                $sizeBytes = $uploadedFile->getSize() ?: 0;
+                $uploadedFile->move($uploadsDirectory, $newFilename);
+
+                $projectFile = new ProjectFile();
+                $projectFile->setProject($project);
+                $projectFile->setName($originalName);
+                $projectFile->setSizeBytes($sizeBytes);
+                $projectFile->setFilePath('var/uploads/projects/' . $project->getId() . '/' . $newFilename);
+                $projectFile->setUploadedBy($currentUserProvider->getAdmin());
+
+                $entityManager->persist($projectFile);
+                $entityManager->flush();
+
+                $this->addFlash('success', sprintf('Deliverable file "%s" has been uploaded successfully.', $originalName));
+            }
+        } else {
+            $this->addFlash('error', 'Could not upload file. Please ensure it is under 10 MB and in an accepted format (PDF, PNG, JPG, ZIP, FIG).');
+        }
+
+        return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    // Beyond the lesson: Secure project file download
+    #[Route('/{id}/files/{fileId}/download', name: 'admin_project_file_download', methods: ['GET'])]
+    public function downloadFile(
+        int $id,
+        int $fileId,
+        ProjectRepository $projectRepository,
+        ProjectFileRepository $fileRepository
+    ): Response {
+        $project = $projectRepository->find($id);
+        if (!$project) {
+            throw $this->createNotFoundException('Project not found.');
+        }
+
+        // Beyond the lesson: None of these actions work on a cancelled project
+        if ($project->isCancelled()) {
+            $this->addFlash('error', 'File downloads are locked for cancelled sprint records.');
+            return $this->redirectToRoute('admin_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $file = $fileRepository->find($fileId);
+        if (!$file || $file->getProject()->getId() !== $project->getId()) {
+            throw $this->createNotFoundException('Deliverable file not found.');
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/' . $file->getFilePath();
+        if (!file_exists($fullPath)) {
+            throw $this->createNotFoundException('The file asset does not exist on disk.');
+        }
+
+        $response = new BinaryFileResponse($fullPath);
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file->getName());
+
+        return $response;
     }
 
     #[Route('/{id}/edit', name: 'admin_project_edit', methods: ['GET', 'POST'])]

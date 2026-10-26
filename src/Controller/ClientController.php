@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Payment;
 use App\Entity\Project;
+use App\Entity\ProjectFile;
 use App\Entity\ProjectMessage;
 use App\Enum\MessageRole;
 use App\Enum\PaymentStatus;
@@ -14,13 +15,16 @@ use App\Form\MessageType;
 use App\Form\PaymentType;
 use App\Form\ProfileType;
 use App\Mock\MockProjects;
+use App\Repository\ProjectFileRepository;
 use App\Repository\ProjectRepository;
 use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -438,6 +442,107 @@ class ClientController extends AbstractController
         } else {
             $this->addFlash('error', 'Invalid cancellation request.');
         }
+
+        return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+    }
+
+    // Beyond the lesson: Secure project file download for client
+    #[Route('/client/projects/{id}/files/{fileId}/download', name: 'client_project_file_download', methods: ['GET'])]
+    public function downloadFile(
+        int $id,
+        int $fileId,
+        ProjectRepository $projectRepository,
+        ProjectFileRepository $fileRepository,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $project = $projectRepository->find($id);
+        if (!$project) {
+            throw $this->createNotFoundException('Project not found.');
+        }
+
+        $client = $currentUserProvider->getClient();
+
+        // Beyond the lesson: Check project ownership
+        if ($project->getUser()?->getId() !== $client?->getId()) {
+            $this->addFlash('error', 'You can only download files from your own project workspace.');
+            return $this->redirectToRoute('client_projects', [], Response::HTTP_SEE_OTHER);
+        }
+
+        // Beyond the lesson: None of these actions work on a cancelled project
+        if ($project->isCancelled()) {
+            $this->addFlash('error', 'File downloads are locked for cancelled sprint records.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $file = $fileRepository->find($fileId);
+        if (!$file || $file->getProject()->getId() !== $project->getId()) {
+            throw $this->createNotFoundException('File not found in project workspace.');
+        }
+
+        // Beyond the lesson: Client cannot download files they removed from their view
+        if (!$file->isVisibleToClient()) {
+            $this->addFlash('error', 'This file has been removed from your workspace view.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/' . $file->getFilePath();
+        if (!file_exists($fullPath)) {
+            throw $this->createNotFoundException('The file asset does not exist on disk.');
+        }
+
+        $response = new BinaryFileResponse($fullPath);
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file->getName());
+
+        return $response;
+    }
+
+    // Beyond the lesson: Remove file from client view (POST with CSRF)
+    #[Route('/client/projects/{id}/files/{fileId}/remove-view', name: 'client_project_file_remove_view', methods: ['POST'])]
+    public function removeFileView(
+        int $id,
+        int $fileId,
+        Request $request,
+        ProjectRepository $projectRepository,
+        ProjectFileRepository $fileRepository,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $project = $projectRepository->find($id);
+        if (!$project) {
+            throw $this->createNotFoundException('Project not found.');
+        }
+
+        $client = $currentUserProvider->getClient();
+
+        // Beyond the lesson: Check project ownership
+        if ($project->getUser()?->getId() !== $client?->getId()) {
+            $this->addFlash('error', 'You can only manage files from your own project workspace.');
+            return $this->redirectToRoute('client_projects', [], Response::HTTP_SEE_OTHER);
+        }
+
+        // Beyond the lesson: None of these actions work on a cancelled project
+        if ($project->isCancelled()) {
+            $this->addFlash('error', 'File management is locked for cancelled sprint records.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $file = $fileRepository->find($fileId);
+        if (!$file || $file->getProject()->getId() !== $project->getId()) {
+            throw $this->createNotFoundException('File not found.');
+        }
+
+        // CSRF validation: isCsrfTokenValid('remove_file_' . $file->getId(), $request->getPayload()->getString('_token'))
+        $submittedToken = $request->getPayload()->getString('_token');
+        if (!$this->isCsrfTokenValid('remove_file_' . $file->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Invalid security token.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $file->setDeletedByClientAt(new \DateTimeImmutable());
+        $entityManager->flush();
+
+        // Beyond the lesson: User feedback via flash message
+        $this->addFlash('success', sprintf('File "%s" has been removed from your workspace view.', $file->getName()));
 
         return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
     }

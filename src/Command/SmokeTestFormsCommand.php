@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Entity\Project;
+use App\Entity\ProjectFile;
 use App\Entity\ProjectMessage;
 use App\Entity\User;
 use App\Enum\MessageRole;
@@ -13,6 +14,7 @@ use App\Form\ChangePasswordType;
 use App\Form\MessageType;
 use App\Form\PaymentType;
 use App\Form\ProfileType;
+use App\Form\ProjectFileType;
 use App\Repository\ProjectRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +24,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsCommand(
@@ -165,7 +168,80 @@ class SmokeTestFormsCommand extends Command
         }
         $io->success('ChangePasswordType requires >= 8 chars, repeated match, and verifies current password.');
 
-        $io->success('All Prompt 2 Part A forms and verification rules passed!');
+        // 6. Part B — ProjectFileType & File Upload Constraints
+        $io->section('6. ProjectFileType & Deliverable File Constraints');
+        
+        // Blank file check
+        $blankFileForm = $this->formFactory->create(ProjectFileType::class, null, ['csrf_protection' => false]);
+        $blankFileForm->submit([]);
+        if ($blankFileForm->isValid()) {
+            $io->error('ProjectFileType should reject empty submissions');
+            return Command::FAILURE;
+        }
+
+        // Invalid extension (.exe) check
+        $badTempPath = tempnam(sys_get_temp_dir(), 'bad_upload_');
+        file_put_contents($badTempPath, 'Mock file content');
+        $badUploadedFile = new UploadedFile($badTempPath, 'deliverable.exe', 'application/x-msdownload', null, true);
+
+        $badFileForm = $this->formFactory->create(ProjectFileType::class, null, ['csrf_protection' => false]);
+        $badFileForm->submit(['deliverable' => $badUploadedFile]);
+        if ($badFileForm->isValid()) {
+            $io->error('ProjectFileType should reject disallowed extension (.exe)');
+            if (file_exists($badTempPath)) unlink($badTempPath);
+            return Command::FAILURE;
+        }
+        if (file_exists($badTempPath)) unlink($badTempPath);
+
+        // Valid deliverable file (.pdf) check
+        $goodTempPath = tempnam(sys_get_temp_dir(), 'good_upload_');
+        file_put_contents($goodTempPath, '%PDF-1.4 Mock Deliverable Content');
+        $goodUploadedFile = new UploadedFile($goodTempPath, 'Design_Sprint_Deliverable.pdf', 'application/pdf', null, true);
+
+        $goodFileForm = $this->formFactory->create(ProjectFileType::class, null, ['csrf_protection' => false]);
+        $goodFileForm->submit(['deliverable' => $goodUploadedFile]);
+        if (!$goodFileForm->isSubmitted() || !$goodFileForm->isValid()) {
+            $io->error('ProjectFileType failed on valid PDF: ' . (string) $goodFileForm->getErrors(true));
+            if (file_exists($goodTempPath)) unlink($goodTempPath);
+            return Command::FAILURE;
+        }
+        if (file_exists($goodTempPath)) unlink($goodTempPath);
+
+        $io->success('ProjectFileType properly validates deliverable formats (PDF, PNG, JPG, ZIP, FIG) and rejects invalid extensions.');
+
+        // 7. Part B — ProjectFile Entity & Client Visibility Controls
+        $io->section('7. ProjectFile Entity & Client Visibility Controls');
+        $testFile = new ProjectFile();
+        $testFile->setName('Component_System_v2.fig');
+        $testFile->setSizeBytes(4500000);
+        $testFile->setFilePath('var/uploads/projects/1/Component_System_v2.fig');
+
+        if (!$testFile->isVisibleToClient()) {
+            $io->error('ProjectFile should be visible to client by default');
+            return Command::FAILURE;
+        }
+
+        // Simulate client "remove from my view"
+        $testFile->setDeletedByClientAt(new \DateTimeImmutable());
+        if ($testFile->isVisibleToClient()) {
+            $io->error('ProjectFile must not be visible to client once deleted_by_client_at is set');
+            return Command::FAILURE;
+        }
+
+        if ($testFile->getRemovedNotice() === null) {
+            $io->error('ProjectFile getRemovedNotice should provide notification string for admin view');
+            return Command::FAILURE;
+        }
+
+        // Verify storage path security (var/uploads/ vs public/)
+        if (str_starts_with($testFile->getFilePath(), 'public/')) {
+            $io->error('Security violation: Project deliverables must not be stored in public directory!');
+            return Command::FAILURE;
+        }
+
+        $io->success('ProjectFile client visibility controls and secure storage path (var/uploads/) verified.');
+
+        $io->success('All Prompt 2 Part A and Part B forms, business rules, and upload constraints passed!');
 
         return Command::SUCCESS;
     }

@@ -230,16 +230,46 @@
 
                 <!-- File Actions -->
                 <div class="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
-                  <a href="{{ file.filePath|default('#') }}"
-                     download
-                     class="p-2 rounded-xl bg-white dark:bg-white/10 hover:bg-black/5 dark:hover:bg-white/20 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#13224B] dark:text-white text-xs font-bold transition-all cursor-pointer"
-                     title="Download File">
-                    <iconify-icon icon="lucide:download"></iconify-icon>
-                  </a>
+                  {% if not project.isCancelled %}
+                    <a href="{{ path('admin_project_file_download', {'id': project.id, 'fileId': file.id}) }}"
+                       class="p-2 rounded-xl bg-white dark:bg-white/10 hover:bg-black/5 dark:hover:bg-white/20 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#13224B] dark:text-white text-xs font-bold transition-all cursor-pointer"
+                       title="Download File">
+                      <iconify-icon icon="lucide:download"></iconify-icon>
+                    </a>
+                  {% endif %}
                 </div>
 
               </div>
             {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Admin Deliverables Upload Form -->
+        {% if not project.isCancelled %}
+          <div class="pt-4 border-t border-[rgba(19,34,75,0.06)] dark:border-white/10">
+            {{ form_start(fileUploadForm, {
+              'action': path('admin_project_file_upload', {'id': project.id}),
+              'method': 'POST',
+              'attr': {'enctype': 'multipart/form-data', 'class': 'space-y-3'}
+            }) }}
+              <div class="space-y-1.5">
+                {{ form_label(fileUploadForm.deliverable, 'Upload New Deliverable (Max 10 MB: PDF, PNG, JPG, ZIP, FIG)', {
+                  'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}
+                }) }}
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  {{ form_widget(fileUploadForm.deliverable, {
+                    'attr': {'class': 'block w-full text-xs text-[#13224B] dark:text-gray-200 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#4C6CCB]/15 file:text-[#4C6CCB] dark:file:text-[#DDEBFF] hover:file:bg-[#4C6CCB]/25 file:cursor-pointer cursor-pointer border border-[rgba(19,34,75,0.12)] dark:border-white/15 rounded-xl p-1.5 bg-[#F4F6F8] dark:bg-white/5'}
+                  }) }}
+                  <button type="submit"
+                          class="px-5 py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider shadow hover:opacity-90 transition-all flex items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer"
+                          style="background: linear-gradient(135deg, #13224B 0%, #4C6CCB 100%);">
+                    <iconify-icon icon="lucide:upload-cloud" class="text-base"></iconify-icon>
+                    <span>Upload Deliverable</span>
+                  </button>
+                </div>
+                {{ form_errors(fileUploadForm.deliverable) }}
+              </div>
+            {{ form_end(fileUploadForm) }}
           </div>
         {% endif %}
       </div>

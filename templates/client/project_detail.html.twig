@@ -216,19 +216,19 @@
 
                 <!-- Download & Remove Actions -->
                 <div class="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
-                  <!-- Download Action (data-phase2) -->
-                  <button type="button"
-                          data-phase2="download_file"
-                          data-phase2-label="Download {{ file.name }}"
-                          class="px-3.5 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
-                    <iconify-icon icon="lucide:download" class="text-xs"></iconify-icon>
-                    <span>Download</span>
-                  </button>
+                  <!-- Download Action -->
+                  {% if not project.is_cancelled and file.isVisibleToClient %}
+                    <a href="{{ path('client_project_file_download', {'id': project.id, 'fileId': file.id}) }}"
+                       class="px-3.5 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+                      <iconify-icon icon="lucide:download" class="text-xs"></iconify-icon>
+                      <span>Download</span>
+                    </a>
+                  {% endif %}
 
-                  <!-- Remove from View Action (data-phase2, hidden in cancelled state) -->
-                  {% if not project.is_cancelled %}
+                  <!-- Remove from View Action (hidden in cancelled state) -->
+                  {% if not project.is_cancelled and file.isVisibleToClient %}
                     <button type="button"
-                            onclick="openRemoveFileModal('{{ file.name }}')"
+                            onclick="openRemoveFileModal('{{ file.name|e('js') }}', '{{ path('client_project_file_remove_view', {'id': project.id, 'fileId': file.id}) }}', '{{ csrf_token('remove_file_' ~ file.id) }}')"
                             class="p-2 rounded-xl bg-white dark:bg-white/10 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#8890AA] hover:text-rose-600 transition-all cursor-pointer"
                             title="Remove from your view">
                       <iconify-icon icon="lucide:trash-2" class="text-sm"></iconify-icon>
@@ -572,20 +572,21 @@
       Remove this file from your view? This doesn't affect the project record.
     </p>
 
-    <div class="flex items-center justify-end gap-2.5 pt-2">
-      <button type="button" 
-              onclick="closeRemoveFileModal()"
-              class="px-4 py-2.5 rounded-xl text-xs font-bold text-[#8890AA] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-        Keep in View
-      </button>
-      <button type="button"
-              data-phase2="confirm_remove_client_file"
-              data-phase2-label="Remove File from Client View"
-              class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow transition-all flex items-center gap-1.5 cursor-pointer">
-        <iconify-icon icon="lucide:eye-off" class="text-sm"></iconify-icon>
-        <span>Remove from View</span>
-      </button>
-    </div>
+    <form id="removeFileForm" method="POST" action="">
+      <input type="hidden" name="_token" id="removeFileToken" value="">
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" 
+                onclick="closeRemoveFileModal()"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold text-[#8890AA] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+          Keep in View
+        </button>
+        <button type="submit"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow transition-all flex items-center gap-1.5 cursor-pointer">
+          <iconify-icon icon="lucide:eye-off" class="text-sm"></iconify-icon>
+          <span>Remove from View</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -649,8 +650,10 @@
 </div>
 
 <script>
-  function openRemoveFileModal(fileName) {
+  function openRemoveFileModal(fileName, actionUrl, csrfToken) {
     document.getElementById('removeFileName').textContent = fileName;
+    document.getElementById('removeFileForm').action = actionUrl;
+    document.getElementById('removeFileToken').value = csrfToken;
     document.getElementById('removeFileModal').classList.remove('hidden');
   }
 
