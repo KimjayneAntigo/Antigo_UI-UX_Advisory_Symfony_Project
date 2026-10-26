@@ -502,4 +502,71 @@ class Project
     {
         return $this->payments;
     }
+
+    public function getStartDateFormatted(): string
+    {
+        return $this->start_date ? $this->start_date->format('M d, Y') : 'Kickoff';
+    }
+
+    public function getLatestPayment(): ?Payment
+    {
+        if ($this->payments->isEmpty()) {
+            return null;
+        }
+
+        $payments = $this->payments->toArray();
+        usort($payments, fn (Payment $a, Payment $b) => ($b->getId() ?? 0) <=> ($a->getId() ?? 0));
+
+        return $payments[0] ?? null;
+    }
+
+    public function getPaymentState(): string
+    {
+        if ($this->isCancelled()) {
+            return 'not_available';
+        }
+
+        if ($this->current_phase->value < 5) {
+            return 'not_available';
+        }
+
+        if ($this->invoice_sent_at === null) {
+            return 'complete_no_invoice';
+        }
+
+        $latest = $this->getLatestPayment();
+        if ($latest !== null) {
+            // Map verified status to 'paid' for UI styling
+            if ($latest->getStatus() === \App\Enum\PaymentStatus::VERIFIED) {
+                return 'paid';
+            }
+
+            return $latest->getStatus()->value; // 'pending' or 'rejected'
+        }
+
+        return 'invoice_sent';
+    }
+
+    public function getPaymentRef(): ?string
+    {
+        return $this->getLatestPayment()?->getReference() ?? 'PAY-00001';
+    }
+
+    public function getPaymentAmount(): ?string
+    {
+        $latest = $this->getLatestPayment();
+        if ($latest !== null) {
+            return '$' . number_format((float)$latest->getAmount(), 2);
+        }
+
+        return $this->getFormattedBudget();
+    }
+
+    /**
+     * @return Collection<int, ProjectFile>
+     */
+    public function getClientVisibleFiles(): Collection
+    {
+        return $this->files->filter(fn (ProjectFile $file) => $file->isVisibleToClient());
+    }
 }

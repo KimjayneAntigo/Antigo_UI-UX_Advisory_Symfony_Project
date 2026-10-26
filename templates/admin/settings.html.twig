@@ -1,0 +1,155 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Studio Settings &amp; Profile &mdash; Studio Admin | Antigo{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-extrabold text-[#13224B] dark:text-white tracking-tight">Studio Settings &amp; Profile</h1>
+    <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Manage lead designer details, studio contact preferences, and administrative security credentials.</p>
+  </div>
+
+  <!-- Profile Form Card -->
+  <div class="dashboard-card p-6 sm:p-8 space-y-6">
+    <div class="flex items-center gap-4 pb-6 border-b border-gray-100 dark:border-white/10">
+      <div class="w-16 h-16 rounded-2xl bg-[#13224B] dark:bg-white/10 text-white font-extrabold text-xl flex items-center justify-center shadow-md border border-white/15 flex-shrink-0">
+        {{ user.name|slice(0, 2)|upper }}
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-[#13224B] dark:text-white">{{ user.name }}</h2>
+        <p class="text-xs text-[#8890AA]">{{ user.company|default('Antigo UI/UX Advisory Studio') }} &bull; Lead Designer &amp; Studio Admin</p>
+      </div>
+    </div>
+
+    <!-- 1. Profile Settings Form -->
+    {{ form_start(profileForm, {'action': path('admin_settings'), 'method': 'POST', 'attr': {'class': 'space-y-5', 'novalidate': 'novalidate'}}) }}
+      <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#4C6CCB] dark:text-[#DDEBFF]">
+        Studio Identity &amp; Contact Details
+      </h3>
+
+      {% if not profileForm.vars.valid and profileForm.vars.errors|length > 0 %}
+        <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+          {{ form_errors(profileForm) }}
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        
+        {# Full Name #}
+        <div class="space-y-1.5">
+          {{ form_label(profileForm.name, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+          {{ form_widget(profileForm.name, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/15 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]' ~ (profileForm.name.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+          {% if not profileForm.name.vars.valid %}
+            <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+              {{ form_errors(profileForm.name) }}
+            </div>
+          {% endif %}
+        </div>
+
+        {# Company Name #}
+        <div class="space-y-1.5">
+          {{ form_label(profileForm.company, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+          {{ form_widget(profileForm.company, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/15 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]' ~ (profileForm.company.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+          {% if not profileForm.company.vars.valid %}
+            <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+              {{ form_errors(profileForm.company) }}
+            </div>
+          {% endif %}
+        </div>
+
+        {# Email Address (Contextual Read-only) #}
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]">Studio Master Email</label>
+          <input type="email" value="{{ user.email }}" disabled
+                 class="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-white/10 border border-[rgba(19,34,75,0.06)] dark:border-white/10 text-xs text-[#8890AA] cursor-not-allowed">
+          <p class="text-[10px] text-[#8890AA]">Primary administrative root login credential.</p>
+        </div>
+
+        {# Phone Number #}
+        <div class="space-y-1.5">
+          {{ form_label(profileForm.phone, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+          {{ form_widget(profileForm.phone, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/15 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]' ~ (profileForm.phone.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+          {% if not profileForm.phone.vars.valid %}
+            <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+              {{ form_errors(profileForm.phone) }}
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <div class="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end">
+        <button type="submit" 
+                class="px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-md hover:opacity-90 transition-all cursor-pointer"
+                style="background: linear-gradient(135deg, #13224B, #4C6CCB);">
+          Save Studio Profile
+        </button>
+      </div>
+    {{ form_end(profileForm) }}
+
+    <!-- 2. Security & Password Change Form -->
+    <div class="pt-8 border-t border-gray-100 dark:border-white/10">
+      <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#4C6CCB] dark:text-[#DDEBFF] mb-4">
+        Admin Password &amp; Access Credentials
+      </h3>
+
+      {{ form_start(passwordForm, {'action': path('admin_settings'), 'method': 'POST', 'attr': {'class': 'space-y-5', 'novalidate': 'novalidate'}}) }}
+        
+        {% if not passwordForm.vars.valid and passwordForm.vars.errors|length > 0 %}
+          <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+            {{ form_errors(passwordForm) }}
+          </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          
+          {# Current Password #}
+          <div class="space-y-1.5">
+            {{ form_label(passwordForm.currentPassword, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+            {{ form_widget(passwordForm.currentPassword, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/15 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]' ~ (passwordForm.currentPassword.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+            {% if not passwordForm.currentPassword.vars.valid %}
+              <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+                {{ form_errors(passwordForm.currentPassword) }}
+              </div>
+            {% endif %}
+          </div>
+
+          {# New Password #}
+          <div class="space-y-1.5">
+            {{ form_label(passwordForm.newPassword.first, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+            {{ form_widget(passwordForm.newPassword.first, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/15 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]' ~ (passwordForm.newPassword.first.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+            {% if not passwordForm.newPassword.first.vars.valid %}
+              <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+                {{ form_errors(passwordForm.newPassword.first) }}
+              </div>
+            {% endif %}
+          </div>
+
+          {# Confirm New Password #}
+          <div class="space-y-1.5">
+            {{ form_label(passwordForm.newPassword.second, null, {'label_attr': {'class': 'block text-xs font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+            {{ form_widget(passwordForm.newPassword.second, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/15 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB]' ~ (passwordForm.newPassword.second.vars.valid ? '' : ' border-rose-500 ring-1 ring-rose-500')}}) }}
+            {% if not passwordForm.newPassword.second.vars.valid %}
+              <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+                {{ form_errors(passwordForm.newPassword.second) }}
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <div class="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end">
+          <button type="submit" 
+                  class="px-5 py-2.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3b59b3] text-white text-xs font-bold shadow-md transition-all cursor-pointer">
+            Update Admin Password
+          </button>
+        </div>
+      {{ form_end(passwordForm) }}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

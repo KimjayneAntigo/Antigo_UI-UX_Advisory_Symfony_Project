@@ -2,10 +2,26 @@
 
 namespace App\Controller;
 
+use App\Entity\Payment;
+use App\Entity\Project;
+use App\Entity\ProjectMessage;
+use App\Enum\MessageRole;
+use App\Enum\PaymentStatus;
+use App\Enum\ProjectStatus;
+use App\Form\CancelProjectType;
+use App\Form\ChangePasswordType;
+use App\Form\MessageType;
+use App\Form\PaymentType;
+use App\Form\ProfileType;
 use App\Mock\MockProjects;
+use App\Repository\ProjectRepository;
+use App\Service\CurrentUserProvider;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class ClientController extends AbstractController
@@ -190,44 +206,239 @@ class ClientController extends AbstractController
         ]);
     }
 
-    #[Route('/client/settings', name: 'client_settings')]
-    public function settings(): Response
-    {
+    #[Route('/client/settings', name: 'client_settings', methods: ['GET', 'POST'])]
+    public function settings(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $user = $currentUserProvider->getClient();
+        $profileForm = $this->createForm(ProfileType::class, $user);
+        $passwordForm = $this->createForm(ChangePasswordType::class);
+
+        if ($request->isMethod('POST')) {
+            if ($request->request->has('profile')) {
+                $profileForm->handleRequest($request);
+                if ($profileForm->isSubmitted() && $profileForm->isValid()) {
+                    $entityManager->flush();
+
+                    // Beyond the lesson: User feedback via flash message
+                    $this->addFlash('success', 'Your organization profile information has been updated.');
+
+                    return $this->redirectToRoute('client_settings', [], Response::HTTP_SEE_OTHER);
+                }
+            } elseif ($request->request->has('change_password')) {
+                $passwordForm->handleRequest($request);
+                if ($passwordForm->isSubmitted() && $passwordForm->isValid()) {
+                    $currentPassword = (string)$passwordForm->get('currentPassword')->getData();
+                    $newPassword = (string)$passwordForm->get('newPassword')->getData();
+
+                    if (!$passwordHasher->isPasswordValid($user, $currentPassword)) {
+                        $passwordForm->get('currentPassword')->addError(new FormError('Current password is incorrect.'));
+                    } else {
+                        $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
+                        $entityManager->flush();
+
+                        // Beyond the lesson: User feedback via flash message
+                        $this->addFlash('success', 'Your account password has been changed successfully.');
+
+                        return $this->redirectToRoute('client_settings', [], Response::HTTP_SEE_OTHER);
+                    }
+                }
+            }
+        }
+
         return $this->render('client/settings.html.twig', [
-            'pageTitle' => 'Settings',
+            'pageTitle' => 'Account & Workspace Settings',
             'unreadMessagesCount' => 2,
-            'user' => [
-                'name' => 'Maria Santos',
-                'email' => 'maria@pesolink.ph',
-                'company' => 'Pesolink Technologies Inc.',
-                'phone' => '+63 917 000 1234',
-                'timezone' => 'Asia/Manila (GMT+8)'
-            ]
+            'user' => $user,
+            'profileForm' => $profileForm->createView(),
+            'passwordForm' => $passwordForm->createView(),
         ]);
     }
 
-    #[Route('/client/projects/{id}', name: 'client_project_detail')]
-    public function projectDetail(string $id, Request $request): Response
-    {
-        $project = MockProjects::getById($id);
+    #[Route('/client/projects/{id}', name: 'client_project_detail', methods: ['GET'])]
+    public function projectDetail(
+        int $id,
+        Request $request,
+        ProjectRepository $projectRepository,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $project = $projectRepository->find($id);
 
         if (!$project) {
             return $this->render('error/404.html.twig', [
                 'pageTitle' => 'Project Not Found — Client Portal',
-                'requestedId' => $id,
+                'requestedId' => (string)$id,
                 'unreadMessagesCount' => 2,
             ], new Response('', Response::HTTP_NOT_FOUND));
         }
 
-        // Allow previewing the 4 payment states via ?payment_state= if specified
-        if ($paymentStateOverride = $request->query->get('payment_state')) {
-            $project['paymentState'] = $paymentStateOverride;
-        }
+        $messageForm = $this->createForm(MessageType::class);
+        $paymentForm = $this->createForm(PaymentType::class);
+        $cancelForm = $this->createForm(CancelProjectType::class);
 
         return $this->render('client/project_detail.html.twig', [
-            'pageTitle' => $project['title'] . ' — Project Workspace',
+            'pageTitle' => $project->getTitle() . ' — Project Workspace',
             'unreadMessagesCount' => 2,
             'project' => $project,
+            'messageForm' => $messageForm->createView(),
+            'paymentForm' => $paymentForm->createView(),
+            'cancelForm' => $cancelForm->createView(),
+            'currentUser' => $currentUserProvider->getClient(),
         ]);
+    }
+
+    #[Route('/client/projects/{id}/message', name: 'client_project_message', methods: ['POST'])]
+    public function sendMessage(
+        int $id,
+        Request $request,
+        ProjectRepository $projectRepository,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $project = $projectRepository->find($id);
+        if (!$project) {
+            throw $this->createNotFoundException('Project not found.');
+        }
+
+        // Beyond the lesson: Refuse messages on cancelled projects
+        if ($project->isCancelled()) {
+            $this->addFlash('error', 'Messaging is locked for cancelled sprint records.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $message = new ProjectMessage();
+        $form = $this->createForm(MessageType::class, $message);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $message->setProject($project);
+            $message->setSender($currentUserProvider->getClient());
+            $message->setRole(MessageRole::CLIENT);
+
+            $entityManager->persist($message);
+            $entityManager->flush();
+
+            // Beyond the lesson: User feedback via flash message
+            $this->addFlash('success', 'Your message has been delivered to Kimberly.');
+        } else {
+            $this->addFlash('error', 'Please enter a valid message before sending.');
+        }
+
+        return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/client/projects/{id}/payment', name: 'client_project_payment', methods: ['POST'])]
+    public function submitPayment(
+        int $id,
+        Request $request,
+        ProjectRepository $projectRepository,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $project = $projectRepository->find($id);
+        if (!$project) {
+            throw $this->createNotFoundException('Project not found.');
+        }
+
+        $client = $currentUserProvider->getClient();
+
+        // Beyond the lesson: Security rule — project must belong to the logged-in client
+        if ($project->getUser()?->getId() !== $client?->getId()) {
+            $this->addFlash('error', 'You can only submit payment for your own projects.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        // Beyond the lesson: Security rule — must be completed and invoiced
+        if (!$project->isCompleted() || $project->getInvoiceSentAt() === null) {
+            $this->addFlash('error', 'Payment can only be submitted for completed projects with an issued milestone invoice.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        // Beyond the lesson: Security rule — no pending or verified payment can exist
+        foreach ($project->getPayments() as $existingPayment) {
+            if (in_array($existingPayment->getStatus(), [PaymentStatus::PENDING, PaymentStatus::VERIFIED], true)) {
+                $this->addFlash('error', sprintf('Payment reference %s is already on file for this project.', $existingPayment->getReference()));
+                return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+            }
+        }
+
+        $form = $this->createForm(PaymentType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $payment = new Payment();
+            $payment->setProject($project);
+            $payment->setUser($client);
+            // Beyond the lesson: Security rule — amount is NEVER read from request, always set from project budget
+            $payment->setAmount($project->getBudget());
+            $payment->setPaymentMethod($form->get('method')->getData());
+            $payment->setStatus(PaymentStatus::PENDING);
+            $payment->setSubmittedAt(new \DateTimeImmutable());
+
+            $entityManager->persist($payment);
+            $entityManager->flush();
+
+            // Beyond the lesson: User feedback via flash message showing reference
+            $this->addFlash('success', sprintf('Payment reference %s submitted successfully for %s USD. The studio will verify your payment.', $payment->getReference(), $project->getFormattedBudget()));
+        } else {
+            $this->addFlash('error', 'Please select a valid payment method.');
+        }
+
+        return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/client/projects/{id}/cancel', name: 'client_project_cancel', methods: ['POST'])]
+    public function cancelProject(
+        int $id,
+        Request $request,
+        ProjectRepository $projectRepository,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $project = $projectRepository->find($id);
+        if (!$project) {
+            throw $this->createNotFoundException('Project not found.');
+        }
+
+        $client = $currentUserProvider->getClient();
+
+        // Beyond the lesson: Client can only cancel their own project
+        if ($project->getUser()?->getId() !== $client?->getId()) {
+            $this->addFlash('error', 'You can only cancel your own projects.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        // Beyond the lesson: Refuse cancellation if already completed or cancelled
+        if ($project->isCompleted() || $project->isCancelled()) {
+            $this->addFlash('error', 'Cannot cancel a project that is already completed or cancelled.');
+            return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $form = $this->createForm(CancelProjectType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $reason = trim((string)$form->get('reason')->getData());
+            if ($reason === '') {
+                $reason = 'Client requested project freeze.';
+            }
+
+            $project->setStatusType(ProjectStatus::CANCELLED);
+            $project->setCancelledAt(new \DateTimeImmutable());
+            $project->setCancelledBy($client);
+            $project->setCancellationReason($reason);
+
+            $entityManager->flush();
+
+            // Beyond the lesson: User feedback via flash message
+            $this->addFlash('success', sprintf('Sprint %s has been cancelled.', $project->getProjectCode()));
+        } else {
+            $this->addFlash('error', 'Invalid cancellation request.');
+        }
+
+        return $this->redirectToRoute('client_project_detail', ['id' => $id], Response::HTTP_SEE_OTHER);
     }
 }

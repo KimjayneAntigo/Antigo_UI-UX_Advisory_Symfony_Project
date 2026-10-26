@@ -4,8 +4,11 @@ namespace App\Controller\Admin;
 
 use App\Config\ProjectPhases;
 use App\Entity\Project;
+use App\Entity\ProjectMessage;
+use App\Enum\MessageRole;
 use App\Enum\ProjectPhase;
 use App\Enum\ProjectStatus;
+use App\Form\MessageType;
 use App\Form\ProjectType;
 use App\Repository\ProjectRepository;
 use App\Service\CurrentUserProvider;
@@ -101,14 +104,51 @@ final class ProjectController extends AbstractController
     #[Route('/{id}/show', name: 'admin_project_show', methods: ['GET'])]
     public function show(Project $project): Response
     {
+        $messageForm = $this->createForm(MessageType::class);
+
         // Renders the rich Antigo project detail view with real Project entity
         return $this->render('admin/project/show.html.twig', [
             'pageTitle' => $project->getTitle() . ' (' . $project->getProjectCode() . ') — Studio Admin',
             'project' => $project,
             'project_phases' => ProjectPhases::getAll(),
+            'messageForm' => $messageForm->createView(),
             'inquiriesPendingCount' => 1,
             'paymentsPendingCount' => 2,
         ]);
+    }
+
+    #[Route('/{id}/message', name: 'admin_project_message', methods: ['POST'])]
+    public function message(
+        Request $request,
+        Project $project,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        // Beyond the lesson: Refuse messages on cancelled projects
+        if ($project->isCancelled()) {
+            $this->addFlash('error', 'Cannot post messages to a cancelled project.');
+            return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        $message = new ProjectMessage();
+        $form = $this->createForm(MessageType::class, $message);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $message->setProject($project);
+            $message->setSender($currentUserProvider->getAdmin());
+            $message->setRole(MessageRole::DESIGNER);
+
+            $entityManager->persist($message);
+            $entityManager->flush();
+
+            // Beyond the lesson: User feedback via flash message
+            $this->addFlash('success', 'Your message has been posted to the project sprint thread.');
+        } else {
+            $this->addFlash('error', 'Please enter a valid message before sending.');
+        }
+
+        return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{id}/edit', name: 'admin_project_edit', methods: ['GET', 'POST'])]

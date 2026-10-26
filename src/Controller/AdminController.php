@@ -2,9 +2,16 @@
 
 namespace App\Controller;
 
+use App\Form\ChangePasswordType;
+use App\Form\ProfileType;
 use App\Mock\MockProjects;
+use App\Service\CurrentUserProvider;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class AdminController extends AbstractController
@@ -239,5 +246,56 @@ class AdminController extends AbstractController
         ]);
     }
 
+    #[Route('/admin/settings', name: 'admin_settings', methods: ['GET', 'POST'])]
+    public function settings(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $user = $currentUserProvider->getAdmin();
+        $profileForm = $this->createForm(ProfileType::class, $user);
+        $passwordForm = $this->createForm(ChangePasswordType::class);
 
+        if ($request->isMethod('POST')) {
+            if ($request->request->has('profile')) {
+                $profileForm->handleRequest($request);
+                if ($profileForm->isSubmitted() && $profileForm->isValid()) {
+                    $entityManager->flush();
+
+                    // Beyond the lesson: User feedback via flash message
+                    $this->addFlash('success', 'Studio profile information updated successfully.');
+
+                    return $this->redirectToRoute('admin_settings', [], Response::HTTP_SEE_OTHER);
+                }
+            } elseif ($request->request->has('change_password')) {
+                $passwordForm->handleRequest($request);
+                if ($passwordForm->isSubmitted() && $passwordForm->isValid()) {
+                    $currentPassword = (string)$passwordForm->get('currentPassword')->getData();
+                    $newPassword = (string)$passwordForm->get('newPassword')->getData();
+
+                    if (!$passwordHasher->isPasswordValid($user, $currentPassword)) {
+                        $passwordForm->get('currentPassword')->addError(new FormError('Current password is incorrect.'));
+                    } else {
+                        $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
+                        $entityManager->flush();
+
+                        // Beyond the lesson: User feedback via flash message
+                        $this->addFlash('success', 'Studio master password has been changed successfully.');
+
+                        return $this->redirectToRoute('admin_settings', [], Response::HTTP_SEE_OTHER);
+                    }
+                }
+            }
+        }
+
+        return $this->render('admin/settings.html.twig', [
+            'pageTitle' => 'Studio Settings & Profile — Admin',
+            'inquiriesPendingCount' => 1,
+            'paymentsPendingCount' => 2,
+            'user' => $user,
+            'profileForm' => $profileForm->createView(),
+            'passwordForm' => $passwordForm->createView(),
+        ]);
+    }
 }

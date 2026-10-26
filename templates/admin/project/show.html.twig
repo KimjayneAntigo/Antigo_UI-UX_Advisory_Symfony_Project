@@ -295,6 +295,38 @@
           {% endfor %}
         </div>
 
+        <!-- Reply Input Bar (locked if cancelled) -->
+        <div class="pt-3 border-t border-[rgba(19,34,75,0.08)] dark:border-white/10">
+          {% if project.isCancelled %}
+            <div class="p-3.5 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-[#8890AA] text-center font-medium">
+              <iconify-icon icon="lucide:lock" class="inline-block mr-1"></iconify-icon>
+              Messaging locked for cancelled project sprint.
+            </div>
+          {% else %}
+            {{ form_start(messageForm, {'action': path('admin_project_message', {'id': project.id}), 'method': 'POST', 'attr': {'class': 'space-y-2'}}) }}
+              <div class="space-y-1">
+                {{ form_label(messageForm.message, 'Post Studio Message', {'label_attr': {'class': 'block text-[11px] font-bold text-[#13224B] dark:text-[#DDEBFF]'}}) }}
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                  <div class="flex-1">
+                    {{ form_widget(messageForm.message, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-xs text-[#13224B] dark:text-white outline-none focus:ring-2 focus:ring-[#4C6CCB] resize-y', 'rows': '2', 'placeholder': 'Send guidance, update, or question to client...'}}) }}
+                  </div>
+                  <button type="submit"
+                          class="px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow hover:opacity-90 transition-all flex items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer"
+                          style="background: linear-gradient(135deg, #13224B, #4C6CCB);">
+                    <span>Post</span>
+                    <iconify-icon icon="lucide:send" class="text-sm"></iconify-icon>
+                  </button>
+                </div>
+                {% if not messageForm.message.vars.valid %}
+                  <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+                    {{ form_errors(messageForm.message) }}
+                  </div>
+                {% endif %}
+              </div>
+            {{ form_end(messageForm) }}
+          {% endif %}
+        </div>
+
       </div>
 
     </div>

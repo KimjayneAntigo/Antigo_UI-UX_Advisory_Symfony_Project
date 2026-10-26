@@ -58,3 +58,9 @@ This checklist tracks every control and action across **Antigo Advisory WebApp**
 * All above controls display a toast: **"Available once the database is connected."**
 * Neither forms nor action buttons silently fail or cause empty reloads.
 * Standardized 5-phase lifecycle is driven centrally by `App\Config\ProjectPhases` across all views.
+
+---
+
+## 6. Public Pages Note (Prompt 2 — Form Manipulation)
+* **Start a Project** & **Book a Consultation**: Public consumer-facing pages (`/start-project`, `/book-consultation`) have not been built yet in `Antigo_Advisory_WebApp`. Per prompt instructions, these forms are skipped and will be wired with `InquiryType` and `BookingType` when the public landing and booking pages are introduced.
+
