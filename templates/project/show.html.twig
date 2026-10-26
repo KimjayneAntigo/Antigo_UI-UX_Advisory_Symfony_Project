@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Project{% endblock %}
+
+{% block body %}
+    <h1>Project</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ project.id }}</td>
+            </tr>
+            <tr>
+                <th>Project_code</th>
+                <td>{{ project.projectCode }}</td>
+            </tr>
+            <tr>
+                <th>Title</th>
+                <td>{{ project.title }}</td>
+            </tr>
+            <tr>
+                <th>Category</th>
+                <td>{{ project.category }}</td>
+            </tr>
+            <tr>
+                <th>Client_name</th>
+                <td>{{ project.clientName }}</td>
+            </tr>
+            <tr>
+                <th>Client_email</th>
+                <td>{{ project.clientEmail }}</td>
+            </tr>
+            <tr>
+                <th>Company</th>
+                <td>{{ project.company }}</td>
+            </tr>
+            <tr>
+                <th>Budget</th>
+                <td>{{ project.budget }}</td>
+            </tr>
+            <tr>
+                <th>Start_date</th>
+                <td>{{ project.startDate ? project.startDate|date('Y-m-d') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Due_date</th>
+                <td>{{ project.dueDate ? project.dueDate|date('Y-m-d') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Current_phase</th>
+                <td>{{ project.currentPhase }}</td>
+            </tr>
+            <tr>
+                <th>Status_type</th>
+                <td>{{ project.statusType }}</td>
+            </tr>
+            <tr>
+                <th>Cancelled_at</th>
+                <td>{{ project.cancelledAt ? project.cancelledAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Cancellation_reason</th>
+                <td>{{ project.cancellationReason }}</td>
+            </tr>
+            <tr>
+                <th>Invoice_sent_at</th>
+                <td>{{ project.invoiceSentAt ? project.invoiceSentAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Internal_notes</th>
+                <td>{{ project.internalNotes }}</td>
+            </tr>
+            <tr>
+                <th>Created_at</th>
+                <td>{{ project.createdAt ? project.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Updated_at</th>
+                <td>{{ project.updatedAt ? project.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_project_index') }}">back to list</a>
+
+    <a href="{{ path('app_project_edit', {'id': project.id}) }}">edit</a>
+
+    {{ include('project/_delete_form.html.twig') }}
+{% endblock %}

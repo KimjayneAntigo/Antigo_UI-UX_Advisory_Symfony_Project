@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Project index{% endblock %}
+
+{% block body %}
+    <h1>Project index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Project_code</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Client_name</th>
+                <th>Client_email</th>
+                <th>Company</th>
+                <th>Budget</th>
+                <th>Start_date</th>
+                <th>Due_date</th>
+                <th>Current_phase</th>
+                <th>Status_type</th>
+                <th>Cancelled_at</th>
+                <th>Cancellation_reason</th>
+                <th>Invoice_sent_at</th>
+                <th>Internal_notes</th>
+                <th>Created_at</th>
+                <th>Updated_at</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for project in projects %}
+            <tr>
+                <td>{{ project.id }}</td>
+                <td>{{ project.projectCode }}</td>
+                <td>{{ project.title }}</td>
+                <td>{{ project.category }}</td>
+                <td>{{ project.clientName }}</td>
+                <td>{{ project.clientEmail }}</td>
+                <td>{{ project.company }}</td>
+                <td>{{ project.budget }}</td>
+                <td>{{ project.startDate ? project.startDate|date('Y-m-d') : '' }}</td>
+                <td>{{ project.dueDate ? project.dueDate|date('Y-m-d') : '' }}</td>
+                <td>{{ project.currentPhase }}</td>
+                <td>{{ project.statusType }}</td>
+                <td>{{ project.cancelledAt ? project.cancelledAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ project.cancellationReason }}</td>
+                <td>{{ project.invoiceSentAt ? project.invoiceSentAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ project.internalNotes }}</td>
+                <td>{{ project.createdAt ? project.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ project.updatedAt ? project.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_project_show', {'id': project.id}) }}">show</a>
+                    <a href="{{ path('app_project_edit', {'id': project.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="19">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_project_new') }}">Create new</a>
+{% endblock %}
