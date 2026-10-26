@@ -8,6 +8,7 @@ use App\Enum\ProjectPhase;
 use App\Enum\ProjectStatus;
 use App\Form\ProjectType;
 use App\Repository\ProjectRepository;
+use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -158,5 +159,82 @@ final class ProjectController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_projects', [], Response::HTTP_SEE_OTHER);
+    }
+
+    // =========================================================================
+    // Part C — Project actions (// Beyond the lesson:)
+    // =========================================================================
+
+    #[Route('/{id}/cancel', name: 'admin_project_cancel', methods: ['POST'])]
+    public function cancel(
+        Request $request,
+        Project $project,
+        EntityManagerInterface $entityManager,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        if ($this->isCsrfTokenValid('cancel' . $project->getId(), $request->getPayload()->getString('_token'))) {
+            // Beyond the lesson: Refuse cancellation if already completed or cancelled
+            if ($project->isCompleted() || $project->isCancelled()) {
+                $this->addFlash('error', 'Cannot cancel a project that is already completed or cancelled.');
+                return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+            }
+
+            $reason = trim($request->getPayload()->getString('cancellation_reason'));
+            if ($reason === '') {
+                $reason = 'Client requested project freeze.';
+            }
+
+            $project->setStatusType(ProjectStatus::CANCELLED);
+            $project->setCancelledAt(new \DateTimeImmutable());
+            $project->setCancelledBy($currentUserProvider->getAdmin());
+            $project->setCancellationReason($reason);
+
+            $entityManager->flush();
+
+            $this->addFlash('success', sprintf('Project %s has been cancelled.', $project->getProjectCode()));
+        }
+
+        return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/complete', name: 'admin_project_complete', methods: ['POST'])]
+    public function complete(Request $request, Project $project, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('complete' . $project->getId(), $request->getPayload()->getString('_token'))) {
+            // Beyond the lesson: Refuse completion if cancelled
+            if ($project->isCancelled()) {
+                $this->addFlash('error', 'Cannot mark a cancelled project as complete.');
+                return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+            }
+
+            // Beyond the lesson: Mark completed and advance phase to Delivered
+            $project->setStatusType(ProjectStatus::COMPLETED);
+            $project->setCurrentPhase(ProjectPhase::DELIVERED);
+
+            $entityManager->flush();
+
+            $this->addFlash('success', sprintf('Project %s has been completed and marked as delivered.', $project->getProjectCode()));
+        }
+
+        return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/send-invoice', name: 'admin_project_send_invoice', methods: ['POST'])]
+    public function sendInvoice(Request $request, Project $project, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('send-invoice' . $project->getId(), $request->getPayload()->getString('_token'))) {
+            // Beyond the lesson: Invoices are allowed only if completed and invoiceSentAt is null
+            if (!$project->isCompleted() || $project->getInvoiceSentAt() !== null) {
+                $this->addFlash('error', 'Invoices can only be sent for completed projects that have not yet been invoiced.');
+                return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
+            }
+
+            $project->setInvoiceSentAt(new \DateTimeImmutable());
+            $entityManager->flush();
+
+            $this->addFlash('success', sprintf('Final invoice for project %s has been recorded as sent.', $project->getProjectCode()));
+        }
+
+        return $this->redirectToRoute('admin_project_detail', ['id' => $project->getId()], Response::HTTP_SEE_OTHER);
     }
 }
