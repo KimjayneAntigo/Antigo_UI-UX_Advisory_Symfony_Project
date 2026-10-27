@@ -162,6 +162,12 @@
             </div>
           </div>
         </div>
+      {% else %}
+        <div class="p-8 text-center rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-dashed border-[rgba(19,34,75,0.1)] text-[#8890AA] text-xs space-y-1.5">
+          <iconify-icon icon="lucide:folder-check" class="text-3xl text-[#4C6CCB] mx-auto block"></iconify-icon>
+          <p class="font-bold text-[#13224B] text-sm">No Active Project Sprints</p>
+          <p class="text-[11px] text-[#8890AA]">All ongoing studio deliverables are complete or currently unscheduled.</p>
+        </div>
       {% endfor %}
     </div>
   </div>
@@ -200,6 +206,12 @@
               Details &rarr;
             </a>
           </div>
+        </div>
+      {% else %}
+        <div class="p-8 text-center rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-dashed border-[rgba(19,34,75,0.1)] text-[#8890AA] text-xs space-y-1.5">
+          <iconify-icon icon="lucide:calendar-check" class="text-3xl text-amber-500 mx-auto block"></iconify-icon>
+          <p class="font-bold text-[#13224B] text-sm">Agenda is Clear</p>
+          <p class="text-[11px] text-[#8890AA]">No upcoming advisory sessions scheduled on your calendar.</p>
         </div>
       {% endfor %}
     </div>

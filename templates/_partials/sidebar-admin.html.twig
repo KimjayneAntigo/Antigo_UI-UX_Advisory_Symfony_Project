@@ -1,7 +1,6 @@
 {# Admin Sidebar Partial #}
 {% set currentRoute = app.request.attributes.get('_route') %}
-{% set inquiriesBadge = inquiriesPendingCount|default(1) %}
-{% set paymentsBadge = paymentsPendingCount|default(2) %}
+
 
 <!-- Mobile Sidebar Backdrop -->
 <div id="admin-sidebar-backdrop" 
@@ -53,9 +52,9 @@
           <iconify-icon icon="lucide:inbox" class="text-lg {{ currentRoute starts with 'admin_inquir' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
           <span>Inquiries</span>
         </div>
-        {% if inquiriesBadge > 0 %}
+        {% if notifications.adminNewInquiriesCount > 0 %}
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6C5BB5] text-white shadow-sm">
-            {{ inquiriesBadge }}
+            {{ notifications.adminNewInquiriesCount }}
           </span>
         {% endif %}
       </a>
@@ -67,9 +66,9 @@
           <iconify-icon icon="lucide:credit-card" class="text-lg {{ currentRoute == 'admin_payments' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
           <span>Payments</span>
         </div>
-        {% if paymentsBadge > 0 %}
+        {% if notifications.adminPendingPaymentsCount > 0 %}
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#4C6CCB] text-white shadow-sm">
-            {{ paymentsBadge }}
+            {{ notifications.adminPendingPaymentsCount }}
           </span>
         {% endif %}
       </a>

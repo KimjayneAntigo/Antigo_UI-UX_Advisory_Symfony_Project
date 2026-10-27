@@ -22,6 +22,29 @@ class ProjectRepository extends ServiceEntityRepository
     /**
      * @return list<Project>
      */
+    public function findActive(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.status_type NOT IN (:closedStatuses)')
+            ->setParameter('closedStatuses', [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED])
+            ->orderBy('p.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countActive(): int
+    {
+        return (int) $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->andWhere('p.status_type NOT IN (:closedStatuses)')
+            ->setParameter('closedStatuses', [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED])
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return list<Project>
+     */
     public function findActiveForClient(User $user): array
     {
         return $this->createQueryBuilder('p')

@@ -1,6 +1,6 @@
 {# Client Sidebar Partial #}
 {% set currentRoute = app.request.attributes.get('_route') %}
-{% set unreadBadge = unreadMessagesCount|default(2) %}
+
 
 <!-- Mobile Sidebar Backdrop -->
 <div id="client-sidebar-backdrop" 
@@ -61,9 +61,9 @@
           <iconify-icon icon="lucide:message-square" class="text-lg {{ currentRoute == 'client_messages' ? 'text-white' : 'text-[#8E9CC0] group-hover:text-white' }}"></iconify-icon>
           <span>Messages</span>
         </div>
-        {% if unreadBadge > 0 %}
+        {% if notifications.clientUnreadMessagesCount > 0 %}
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6C5BB5] text-white shadow-sm">
-            {{ unreadBadge }}
+            {{ notifications.clientUnreadMessagesCount }}
           </span>
         {% endif %}
       </a>

@@ -1,5 +1,4 @@
 {# Client Topbar Partial #}
-{% set notifTotal = 5 %}
 
 <header class="dashboard-topbar sticky top-0 z-40 w-full h-[70px] bg-[#13224B] text-white border-b border-white/10 px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-colors shadow-md select-none" data-turbo="false" data-turbo-prefetch="false">
   <!-- Left: Mobile Menu Toggle & Context Breadcrumbs -->
@@ -55,9 +54,9 @@
               title="Notifications"
               class="topbar-control-btn relative w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer">
         <iconify-icon icon="lucide:bell" class="text-base"></iconify-icon>
-        {% if notifTotal > 0 %}
+        {% if notifications.clientTotalNotificationsCount > 0 %}
           <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-amber-950 text-[10px] font-extrabold flex items-center justify-center ring-2 ring-[#13224B]">
-            {{ notifTotal > 99 ? '99+' : notifTotal }}
+            {{ notifications.clientTotalNotificationsCount > 99 ? '99+' : notifications.clientTotalNotificationsCount }}
           </span>
         {% endif %}
       </button>
@@ -68,9 +67,9 @@
         <div class="px-4 pb-2.5 mb-1 border-b border-white/10 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="font-extrabold text-sm text-white">Notifications</span>
-            {% if notifTotal > 0 %}
+            {% if notifications.clientTotalNotificationsCount > 0 %}
               <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-amber-950 leading-none">
-                {{ notifTotal }} new
+                {{ notifications.clientTotalNotificationsCount }} new
               </span>
             {% endif %}
           </div>
@@ -78,47 +77,29 @@
         </div>
 
         <div class="max-h-80 overflow-y-auto divide-y divide-white/5">
-          <!-- Notification 1 -->
-          <a href="{{ path('client_files') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
-            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-              <iconify-icon icon="lucide:receipt"></iconify-icon>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-1">
-                <span class="font-bold text-amber-300 truncate">Invoice Ready</span>
-                <span class="text-[10px] text-white/50 whitespace-nowrap font-mono">PRJ-2998</span>
+          {% for item in notifications.clientNotifications %}
+            <a href="{{ item.url }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
+              <div class="w-8 h-8 rounded-full {% if item.color == 'amber' %}bg-amber-500/20 text-amber-300 border border-amber-400/30{% elseif item.color == 'purple' %}bg-purple-500/20 text-purple-300 border border-purple-400/30{% else %}bg-emerald-500/20 text-emerald-300 border border-emerald-400/30{% endif %} flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+                <iconify-icon icon="{{ item.icon }}"></iconify-icon>
               </div>
-              <p class="text-[11px] text-white/90 line-clamp-1 mt-0.5">Your project 'Brand Refresh — Web' is completed — click to review.</p>
-            </div>
-          </a>
-
-          <!-- Notification 2 -->
-          <a href="{{ path('client_files') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
-            <div class="w-8 h-8 rounded-full bg-blue-500/20 text-[#DDEBFF] border border-blue-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-              <iconify-icon icon="lucide:file-up"></iconify-icon>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-1">
-                <span class="font-bold text-white truncate">Deliverable Uploaded</span>
-                <span class="text-[10px] text-white/50 whitespace-nowrap">2 hrs ago</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="font-bold {% if item.color == 'amber' %}text-amber-300{% else %}text-white{% endif %} truncate">{{ item.title }}</span>
+                  {% if item.badge is defined and item.badge %}
+                    <span class="text-[10px] text-white/50 whitespace-nowrap font-mono">{{ item.badge }}</span>
+                  {% else %}
+                    <span class="text-[10px] text-white/50 whitespace-nowrap">{{ item.time }}</span>
+                  {% endif %}
+                </div>
+                <p class="text-[11px] text-white/90 line-clamp-1 mt-0.5">{{ item.subtitle }}</p>
               </div>
-              <p class="text-[11px] text-white/70 line-clamp-1 mt-0.5">Kimberly uploaded "Final_UI_Kit_v3.fig"</p>
+            </a>
+          {% else %}
+            <div class="px-4 py-6 text-center text-white/60 text-xs">
+              <iconify-icon icon="lucide:check-circle" class="text-2xl text-emerald-400 mb-1 block mx-auto"></iconify-icon>
+              <span>All caught up! No new notifications.</span>
             </div>
-          </a>
-
-          <!-- Notification 3 -->
-          <a href="{{ path('client_messages') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-white/10 transition-colors group">
-            <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-              <iconify-icon icon="lucide:message-square"></iconify-icon>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-1">
-                <span class="font-bold text-white truncate">Message from Kimberly</span>
-                <span class="text-[10px] text-white/50 whitespace-nowrap">10:14 AM</span>
-              </div>
-              <p class="text-[11px] text-white/70 line-clamp-1 mt-0.5">"I've uploaded the updated variant kit to Files for review."</p>
-            </div>
-          </a>
+          {% endfor %}
         </div>
 
         <div class="pt-2 px-4 border-t border-white/10 mt-1 flex items-center justify-between text-[11px]">

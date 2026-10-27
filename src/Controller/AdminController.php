@@ -5,6 +5,10 @@ namespace App\Controller;
 use App\Form\ChangePasswordType;
 use App\Form\ProfileType;
 use App\Mock\MockProjects;
+use App\Repository\BookingRepository;
+use App\Repository\InquiryRepository;
+use App\Repository\PaymentRepository;
+use App\Repository\ProjectRepository;
 use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,57 +22,54 @@ class AdminController extends AbstractController
 {
     #[Route('/admin', name: 'admin_overview')]
     #[Route('/admin/dashboard', name: 'admin_overview_alias')]
-    public function overview(): Response
-    {
+    public function overview(
+        ProjectRepository $projectRepository,
+        InquiryRepository $inquiryRepository,
+        BookingRepository $bookingRepository,
+        PaymentRepository $paymentRepository
+    ): Response {
+        $rawPipeline = $projectRepository->getActivePipelineValue();
+        $formattedPipeline = '$' . number_format((float) $rawPipeline, 0);
+
+        $activeProjects = $projectRepository->findActive();
+        $upcomingSessions = $bookingRepository->findUpcoming(5);
+
+        $activeSprints = [];
+        foreach ($activeProjects as $p) {
+            $activeSprints[] = [
+                'id' => $p->getId(),
+                'code' => $p->getProjectCode(),
+                'title' => $p->getTitle(),
+                'client' => $p->getClientName() . ($p->getCompany() ? ' (' . $p->getCompany() . ')' : ''),
+                'phase' => $p->getCurrentPhase()->label(),
+                'status_badge' => $p->getCurrentPhase()->badge(),
+                'progress' => $p->getProgress(),
+                'budget' => $p->getFormattedBudget(),
+                'updated' => $p->getUpdatedAt()->format('M d'),
+            ];
+        }
+
+        $upcomingAgenda = [];
+        foreach ($upcomingSessions as $b) {
+            $upcomingAgenda[] = [
+                'client' => $b->getUser() ? $b->getUser()->getFullName() : $b->getGuestName(),
+                'service' => $b->getService(),
+                'date' => $b->getBookingDate()->format('Y-m-d'),
+                'time' => $b->getBookingTime()->format('g:i A'),
+                'format' => $b->getMeetingFormat(),
+                'status' => $b->getStatus()->label(),
+            ];
+        }
+
         return $this->render('admin/overview.html.twig', [
             'pageTitle' => 'Studio Command Center',
-            'activePipelineValue' => '$620,000',
-            'activeProjectsCount' => 1,
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
-            'scheduledSessionsCount' => 2,
-            'activeSprints' => [
-                [
-                    'id' => 2,
-                    'code' => 'PRJ-3003',
-                    'title' => 'Cebu Tourism Responsive Website',
-                    'client' => 'Ana Reyes (Cebu Tourism Board)',
-                    'phase' => 'Discovery & Research',
-                    'status_badge' => 'Discovery',
-                    'progress' => 20,
-                    'budget' => '$45,000',
-                    'updated' => '2 hours ago'
-                ],
-                [
-                    'id' => 1,
-                    'code' => 'PRJ-3001',
-                    'title' => 'Pesolink Banking Redesign',
-                    'client' => 'Maria Santos (Pesolink)',
-                    'phase' => 'Design System & Mobile App',
-                    'status_badge' => 'Design',
-                    'progress' => 65,
-                    'budget' => '$120,000',
-                    'updated' => 'Yesterday'
-                ]
-            ],
-            'upcomingAgenda' => [
-                [
-                    'client' => 'Angel Queen Tumapon',
-                    'service' => 'Design Systems',
-                    'date' => '2026-09-10',
-                    'time' => '10:00 AM',
-                    'format' => 'Video Call (Google Meet)',
-                    'status' => 'Confirmed'
-                ],
-                [
-                    'client' => 'Demo Client',
-                    'service' => 'UI Design Consultation',
-                    'date' => '2026-09-10',
-                    'time' => '10:00 AM',
-                    'format' => 'Video Call (Google Meet)',
-                    'status' => 'Pending'
-                ],
-            ],
+            'activePipelineValue' => $formattedPipeline,
+            'activeProjectsCount' => count($activeProjects),
+            'inquiriesPendingCount' => $inquiryRepository->countNew(),
+            'paymentsPendingCount' => $paymentRepository->countPending(),
+            'scheduledSessionsCount' => count($upcomingSessions),
+            'activeSprints' => $activeSprints,
+            'upcomingAgenda' => $upcomingAgenda,
         ]);
     }
 

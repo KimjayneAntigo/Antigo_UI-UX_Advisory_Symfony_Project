@@ -15,7 +15,9 @@ use App\Form\MessageType;
 use App\Form\PaymentType;
 use App\Form\ProfileType;
 use App\Mock\MockProjects;
+use App\Repository\PaymentRepository;
 use App\Repository\ProjectFileRepository;
+use App\Repository\ProjectMessageRepository;
 use App\Repository\ProjectRepository;
 use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,53 +34,77 @@ class ClientController extends AbstractController
 {
     #[Route('/client', name: 'client_dashboard')]
     #[Route('/client/dashboard', name: 'client_dashboard_alias')]
-    public function dashboard(): Response
-    {
+    public function dashboard(
+        ProjectRepository $projectRepository,
+        ProjectFileRepository $fileRepository,
+        ProjectMessageRepository $messageRepository,
+        PaymentRepository $paymentRepository,
+        CurrentUserProvider $currentUserProvider
+    ): Response {
+        $client = $currentUserProvider->getClient();
+
+        $activeProjects = $client ? $projectRepository->findActiveForClient($client) : [];
+        $filesCount = $client ? $fileRepository->countVisibleForClientUser($client) : 0;
+        $unreadMessagesCount = $client ? $messageRepository->countUnreadForUser($client) : 0;
+        $awaitingPayment = $client ? $projectRepository->findAwaitingPaymentForClient($client) : [];
+
+        $projectsList = [];
+        foreach ($activeProjects as $p) {
+            $color = 'blue';
+            if ($p->isCompleted()) {
+                $color = 'emerald';
+            } elseif ($p->getCurrentPhase() === \App\Enum\ProjectPhase::PROTOTYPING) {
+                $color = 'amber';
+            }
+
+            $projectsList[] = [
+                'id' => $p->getId(),
+                'title' => $p->getTitle(),
+                'started' => $p->getEffectiveStartDate()->format('M d'),
+                'phase' => $p->getPhaseName(),
+                'status_badge' => strtoupper($p->getCurrentPhase()->badge()),
+                'status_color' => $color,
+                'progress' => $p->getProgress(),
+            ];
+        }
+
+        // Live recent activity feed
+        $recentActivity = [];
+        if ($client) {
+            $reviewedPayments = $paymentRepository->findRecentlyReviewedForUser($client, 14);
+            foreach ($reviewedPayments as $pm) {
+                $recentActivity[] = [
+                    'text' => 'Payment ' . $pm->getStatus()->label() . ' for ' . ($pm->getProject() ? $pm->getProject()->getTitle() : 'Advisory'),
+                    'time' => $pm->getReviewedAt() ? $pm->getReviewedAt()->format('M d, g:i A') : 'Recent',
+                ];
+            }
+        }
+        foreach ($awaitingPayment as $invP) {
+            $recentActivity[] = [
+                'text' => 'Invoice sent for "' . $invP->getTitle() . '" — awaiting payment settlement',
+                'time' => $invP->getInvoiceSentAt() ? $invP->getInvoiceSentAt()->format('M d') : 'Recent',
+            ];
+        }
+        if (empty($recentActivity)) {
+            $recentActivity = [
+                ['text' => 'Project sprint active and tracked', 'time' => 'Today'],
+                ['text' => 'Studio design consultation logged', 'time' => 'Recently'],
+            ];
+        }
+
         return $this->render('client/dashboard.html.twig', [
             'pageTitle' => 'Client Workspace',
-            'clientName' => 'Maria Santos',
-            'clientFirstName' => 'Maria',
-            'unreadMessagesCount' => 2,
+            'clientName' => $client ? $client->getFullName() : 'Maria Santos',
+            'clientFirstName' => $client ? explode(' ', $client->getFullName())[0] : 'Maria',
+            'unreadMessagesCount' => $unreadMessagesCount,
             'stats' => [
-                'activeProjects' => 2,
-                'filesShared' => 14,
-                'unreadMessages' => 2,
+                'activeProjects' => count($activeProjects),
+                'filesShared' => $filesCount,
+                'unreadMessages' => $unreadMessagesCount,
             ],
-            'projects' => [
-                [
-                    'id' => 1,
-                    'title' => 'Pesolink Banking Redesign',
-                    'started' => 'Jun 14',
-                    'phase' => 'Design phase',
-                    'status_badge' => 'DESIGN',
-                    'status_color' => 'blue',
-                    'progress' => 65,
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'Mobile App — Phase 2',
-                    'started' => 'Jul 2',
-                    'phase' => 'Testing phase',
-                    'status_badge' => 'TESTING',
-                    'status_color' => 'amber',
-                    'progress' => 85,
-                ],
-                [
-                    'id' => 3,
-                    'title' => 'Brand Refresh — Web',
-                    'started' => 'Apr 30',
-                    'phase' => 'Delivered Apr 30',
-                    'status_badge' => 'DELIVERED',
-                    'status_color' => 'emerald',
-                    'progress' => 100,
-                ],
-            ],
-            'recentActivity' => [
-                ['text' => 'Kimberly uploaded "Final_UI_Kit_v3.fig"', 'time' => '2 hours ago'],
-                ['text' => 'New message from Kimberly', 'time' => 'Yesterday, 4:12 PM'],
-                ['text' => 'Project status updated to "Design"', 'time' => 'Aug 2'],
-                ['text' => 'Consultation call completed', 'time' => 'Jul 28'],
-            ],
+            'projects' => $projectsList,
+            'invoiceReadyProjects' => $awaitingPayment,
+            'recentActivity' => array_slice($recentActivity, 0, 5),
         ]);
     }
 
@@ -267,6 +293,7 @@ class ClientController extends AbstractController
         int $id,
         Request $request,
         ProjectRepository $projectRepository,
+        ProjectMessageRepository $messageRepository,
         CurrentUserProvider $currentUserProvider
     ): Response {
         $project = $projectRepository->find($id);
@@ -275,9 +302,11 @@ class ClientController extends AbstractController
             return $this->render('error/404.html.twig', [
                 'pageTitle' => 'Project Not Found — Client Portal',
                 'requestedId' => (string)$id,
-                'unreadMessagesCount' => 2,
             ], new Response('', Response::HTTP_NOT_FOUND));
         }
+
+        // Opening a project thread lowers the unread badge
+        $messageRepository->markReadForViewer($project, \App\Enum\UserRole::CLIENT);
 
         $messageForm = $this->createForm(MessageType::class);
         $paymentForm = $this->createForm(PaymentType::class);
@@ -285,7 +314,6 @@ class ClientController extends AbstractController
 
         return $this->render('client/project_detail.html.twig', [
             'pageTitle' => $project->getTitle() . ' — Project Workspace',
-            'unreadMessagesCount' => 2,
             'project' => $project,
             'messageForm' => $messageForm->createView(),
             'paymentForm' => $paymentForm->createView(),

@@ -9,10 +9,12 @@ use App\Entity\ProjectMessage;
 use App\Enum\MessageRole;
 use App\Enum\ProjectPhase;
 use App\Enum\ProjectStatus;
+use App\Enum\UserRole;
 use App\Form\MessageType;
 use App\Form\ProjectFileType;
 use App\Form\ProjectType;
 use App\Repository\ProjectFileRepository;
+use App\Repository\ProjectMessageRepository;
 use App\Repository\ProjectRepository;
 use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
@@ -109,8 +111,11 @@ final class ProjectController extends AbstractController
 
     #[Route('/{id}', name: 'admin_project_detail', methods: ['GET'])]
     #[Route('/{id}/show', name: 'admin_project_show', methods: ['GET'])]
-    public function show(Project $project): Response
+    public function show(Project $project, ProjectMessageRepository $messageRepository): Response
     {
+        // Opening a project thread lowers the unread badge for admin
+        $messageRepository->markReadForViewer($project, UserRole::ADMIN);
+
         $messageForm = $this->createForm(MessageType::class);
         $fileUploadForm = $this->createForm(ProjectFileType::class);
 
@@ -121,8 +126,6 @@ final class ProjectController extends AbstractController
             'project_phases' => ProjectPhases::getAll(),
             'messageForm' => $messageForm->createView(),
             'fileUploadForm' => $fileUploadForm->createView(),
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
         ]);
     }
 

@@ -26,6 +26,41 @@
     </div>
   </div>
 
+  {# Live Invoice Ready Banner driven by ProjectRepository::findAwaitingPaymentForClient #}
+  {% if invoiceReadyProjects is defined and invoiceReadyProjects|length > 0 %}
+    <div class="space-y-4">
+      {% for invProject in invoiceReadyProjects %}
+        <div class="rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-amber-500/5 border border-amber-400/30 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center text-2xl flex-shrink-0">
+              <iconify-icon icon="lucide:receipt"></iconify-icon>
+            </div>
+            <div>
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                <span>Invoice Ready</span>
+                <span>&bull;</span>
+                <span class="font-mono">{{ invProject.projectCode }}</span>
+              </div>
+              <h3 class="text-sm sm:text-base font-extrabold text-[#13224B] leading-tight">
+                Final invoice ready for "{{ invProject.title }}"
+              </h3>
+              <p class="text-xs text-[#8890AA] mt-0.5">
+                Project sprint has completed all phases. Please review deliverables and proceed with payment settlement.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 flex-shrink-0">
+            <a href="{{ path('client_project_detail', {id: invProject.id}) }}" 
+               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md transition-all">
+              <span>Review &amp; Pay Invoice</span>
+              <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <!-- 3 Quick Metric Cards (Matching Screenshot 2) -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
     
@@ -135,6 +170,12 @@
             </div>
 
           </div>
+        {% else %}
+          <div class="p-8 text-center rounded-2xl bg-[#F4F6F8] dark:bg-white/5 border border-dashed border-[rgba(19,34,75,0.1)] text-[#8890AA] text-xs space-y-1.5">
+            <iconify-icon icon="lucide:folder-plus" class="text-3xl text-[#6C5BB5] mx-auto block"></iconify-icon>
+            <p class="font-bold text-[#13224B] text-sm">No Active Sprints</p>
+            <p class="text-[11px] text-[#8890AA]">You currently have no ongoing design advisory projects.</p>
+          </div>
         {% endfor %}
       </div>
     </div>
@@ -152,6 +193,11 @@
                 <p class="text-xs font-bold text-[#13224B] leading-tight">{{ act.text }}</p>
                 <span class="text-[10.5px] text-[#8890AA] block mt-0.5">{{ act.time }}</span>
               </div>
+            </div>
+          {% else %}
+            <div class="p-4 text-center text-[#8890AA] text-xs">
+              <iconify-icon icon="lucide:activity" class="text-2xl text-[#6C5BB5] mx-auto block mb-1"></iconify-icon>
+              <span>No recent workspace activity recorded.</span>
             </div>
           {% endfor %}
         </div>

@@ -43,4 +43,20 @@ class ProjectFileRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Total deliverables visible to client across all their projects.
+     */
+    public function countVisibleForClientUser(\App\Entity\User $user): int
+    {
+        return (int) $this->createQueryBuilder('f')
+            ->select('COUNT(f.id)')
+            ->join('f.project', 'p')
+            ->andWhere('p.user = :user')
+            ->andWhere('f.deleted_by_client_at IS NULL')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
+
