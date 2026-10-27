@@ -54,4 +54,31 @@ class InquiryRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Matches name, email or company with LIKE, and filters by status.
+     * Only adds each andWhere when the argument is set.
+     *
+     * @return list<Inquiry>
+     */
+    public function search(?string $term = null, ?InquiryStatus $status = null): array
+    {
+        $qb = $this->createQueryBuilder('i');
+
+        if ($term !== null && trim($term) !== '') {
+            $cleanTerm = trim($term);
+            $qb->andWhere('i.name LIKE :term OR i.email LIKE :term OR i.company LIKE :term')
+                ->setParameter('term', '%' . $cleanTerm . '%');
+        }
+
+        if ($status !== null) {
+            $qb->andWhere('i.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        return $qb->orderBy('i.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
+

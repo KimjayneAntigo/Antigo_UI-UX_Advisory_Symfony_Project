@@ -56,4 +56,24 @@ class PaymentRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Finds payments by status, joined to project and user (instructor pattern).
+     *
+     * @return list<Payment>
+     */
+    public function findByStatus(PaymentStatus $s): array
+    {
+        return $this->createQueryBuilder('pm')
+            ->leftJoin('pm.project', 'p')
+            ->addSelect('p')
+            ->leftJoin('pm.user', 'u')
+            ->addSelect('u')
+            ->andWhere('pm.status = :status')
+            ->setParameter('status', $s)
+            ->orderBy('pm.submitted_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
+

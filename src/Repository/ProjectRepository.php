@@ -133,4 +133,54 @@ class ProjectRepository extends ServiceEntityRepository
 
         return 'PRJ-' . $num;
     }
+
+    /**
+     * @return list<Project>
+     */
+    public function findByStatusType(ProjectStatus $s): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.status_type = :status')
+            ->setParameter('status', $s)
+            ->orderBy('p.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Direct counterpart of instructor's ProductRepository::findByCategory().
+     *
+     * @return list<Project>
+     */
+    public function findByCategory(string $category): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.category = :category')
+            ->setParameter('category', $category)
+            ->orderBy('p.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Search projects by title, code, client name, or user name.
+     *
+     * @return list<Project>
+     */
+    public function search(?string $term = null): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.user', 'u');
+
+        if ($term !== null && trim($term) !== '') {
+            $cleanTerm = trim($term);
+            $qb->andWhere('p.title LIKE :term OR p.project_code LIKE :term OR p.client_name LIKE :term OR u.full_name LIKE :term')
+                ->setParameter('term', '%' . $cleanTerm . '%');
+        }
+
+        return $qb->orderBy('p.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
+

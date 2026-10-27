@@ -51,4 +51,23 @@ class BookingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Finds bookings scheduled within an inclusive date range.
+     *
+     * @return list<Booking>
+     */
+    public function findBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.booking_date >= :from')
+            ->andWhere('b.booking_date <= :to')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->orderBy('b.booking_date', 'ASC')
+            ->addOrderBy('b.booking_time', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
+

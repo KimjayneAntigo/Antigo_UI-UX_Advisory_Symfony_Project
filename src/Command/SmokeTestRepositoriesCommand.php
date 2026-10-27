@@ -128,7 +128,33 @@ class SmokeTestRepositoriesCommand extends Command
         $allFiles = $this->fileRepository->findAllForAdmin($p1);
         $io->text(sprintf('findAllForAdmin(PRJ-3003): Found %d files (includes soft-deleted)', count($allFiles)));
 
-        $io->success('All repository methods executed successfully with expected return data!');
+        // 8. New Part B Methods
+        $io->section('8. New Repository Query Methods (Part B)');
+        $inquirySearch = $this->inquiryRepository->search('Tourism', null);
+        $io->text(sprintf('InquiryRepository::search("Tourism"): Found %d match', count($inquirySearch)));
+
+        $inquiryStatusSearch = $this->inquiryRepository->search(null, \App\Enum\InquiryStatus::NEW);
+        $io->text(sprintf('InquiryRepository::search(null, NEW): Found %d matches', count($inquiryStatusSearch)));
+
+        $projectsByStatus = $this->projectRepository->findByStatusType(ProjectStatus::IN_DESIGN);
+        $io->text(sprintf('ProjectRepository::findByStatusType(IN_DESIGN): Found %d matches', count($projectsByStatus)));
+
+        $projectsByCategory = $this->projectRepository->findByCategory('UI/UX Design');
+        $io->text(sprintf('ProjectRepository::findByCategory("UI/UX Design"): Found %d matches', count($projectsByCategory)));
+
+        $projectsSearch = $this->projectRepository->search('Cebu');
+        $io->text(sprintf('ProjectRepository::search("Cebu"): Found %d match', count($projectsSearch)));
+
+        $bookingsBetween = $this->bookingRepository->findBetween(
+            new \DateTimeImmutable('2026-01-01'),
+            new \DateTimeImmutable('2026-12-31')
+        );
+        $io->text(sprintf('BookingRepository::findBetween(2026-01-01, 2026-12-31): Found %d bookings', count($bookingsBetween)));
+
+        $paymentsByStatus = $this->paymentRepository->findByStatus(\App\Enum\PaymentStatus::PENDING);
+        $io->text(sprintf('PaymentRepository::findByStatus(PENDING): Found %d pending payments', count($paymentsByStatus)));
+
+        $io->success('All repository methods (including Part B) executed successfully with expected return data!');
 
         return Command::SUCCESS;
     }
