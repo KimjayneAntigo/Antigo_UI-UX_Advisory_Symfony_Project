@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Enum\BookingStatus;
+use App\Enum\PaymentStatus;
+use App\Enum\ProjectStatus;
 use App\Form\ChangePasswordType;
 use App\Form\ProfileType;
 use App\Mock\MockProjects;
@@ -9,6 +12,7 @@ use App\Repository\BookingRepository;
 use App\Repository\InquiryRepository;
 use App\Repository\PaymentRepository;
 use App\Repository\ProjectRepository;
+use App\Repository\UserRepository;
 use App\Service\CurrentUserProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -73,177 +77,163 @@ class AdminController extends AbstractController
         ]);
     }
 
+    #[Route('/admin/search', name: 'admin_global_search', methods: ['GET'])]
+    public function search(
+        Request $request,
+        UserRepository $userRepository,
+        InquiryRepository $inquiryRepository,
+        ProjectRepository $projectRepository
+    ): Response {
+        $q = trim($request->query->getString('q'));
 
+        $clients = [];
+        $inquiries = [];
+        $projects = [];
 
-    #[Route('/admin/payments', name: 'admin_payments')]
-    public function payments(): Response
+        if ($q !== '') {
+            $clients = $userRepository->searchClients($q);
+            $inquiries = $inquiryRepository->search($q, null);
+            $projects = $projectRepository->search($q);
+        }
+
+        $totalMatches = count($clients) + count($inquiries) + count($projects);
+
+        return $this->render('admin/search_results.html.twig', [
+            'pageTitle' => 'Studio Search Results',
+            'currentQuery' => $q,
+            'query' => $q,
+            'clients' => $clients,
+            'inquiries' => $inquiries,
+            'projects' => $projects,
+            'totalMatches' => $totalMatches,
+        ]);
+    }
+
+    #[Route('/admin/payments', name: 'admin_payments', methods: ['GET'])]
+    public function payments(PaymentRepository $paymentRepository, Request $request): Response
     {
+        $statusParam = $request->query->getString('status');
+        $q = trim($request->query->getString('q'));
+        $statusEnum = $statusParam !== '' ? PaymentStatus::tryFrom($statusParam) : null;
+
+        if ($statusEnum !== null) {
+            $payments = $paymentRepository->findByStatus($statusEnum);
+        } else {
+            $payments = $paymentRepository->findBy([], ['submitted_at' => 'DESC']);
+        }
+
+        if ($q !== '') {
+            $lowerQ = strtolower($q);
+            $payments = array_filter($payments, function ($pm) use ($lowerQ) {
+                return str_contains(strtolower($pm->getReference()), $lowerQ)
+                    || ($pm->getProject() && str_contains(strtolower($pm->getProject()->getTitle()), $lowerQ))
+                    || ($pm->getUser() && str_contains(strtolower($pm->getUser()->getFullName()), $lowerQ));
+            });
+        }
+
+        $allPayments = $paymentRepository->findAll();
+        $stats = [
+            'total' => count($allPayments),
+            'pending' => 0,
+            'verified' => 0,
+            'rejected' => 0,
+        ];
+        foreach ($allPayments as $pm) {
+            match ($pm->getStatus()) {
+                PaymentStatus::PENDING => $stats['pending']++,
+                PaymentStatus::VERIFIED => $stats['verified']++,
+                PaymentStatus::REJECTED => $stats['rejected']++,
+            };
+        }
+
         return $this->render('admin/payments.html.twig', [
             'pageTitle' => 'Payments & Verification',
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
-            'stats' => [
-                'total' => 3,
-                'pending' => 2,
-                'verified' => 1
-            ],
-            'payments' => [
-                [
-                    'id' => 101,
-                    'ref' => 'PAY-9042',
-                    'project_code' => 'PRJ-3001',
-                    'project_title' => 'Pesolink Banking Redesign',
-                    'client_name' => 'Maria Santos',
-                    'client_company' => 'Pesolink',
-                    'amount' => '$25,000',
-                    'method' => 'Wire Transfer',
-                    'status' => 'pending',
-                    'submitted_at' => 'Today, 2:20 PM',
-                    'receipt_file' => 'wire_receipt_pesolink_oct3.pdf'
-                ],
-                [
-                    'id' => 102,
-                    'ref' => 'PAY-9038',
-                    'project_code' => 'PRJ-3003',
-                    'project_title' => 'Cebu Tourism Responsive Website',
-                    'client_name' => 'Ana Reyes',
-                    'client_company' => 'Cebu Tourism Board',
-                    'amount' => '$15,000',
-                    'method' => 'Stripe ACH',
-                    'status' => 'pending',
-                    'submitted_at' => 'Oct 2, 2026',
-                    'receipt_file' => 'stripe_inv_cebu_deposit.pdf'
-                ],
-                [
-                    'id' => 103,
-                    'ref' => 'PAY-8991',
-                    'project_code' => 'PRJ-2998',
-                    'project_title' => 'Brand Refresh — Web',
-                    'client_name' => 'Maria Santos',
-                    'client_company' => 'Pesolink',
-                    'amount' => '$40,000',
-                    'method' => 'Bank Wire (USD)',
-                    'status' => 'verified',
-                    'submitted_at' => 'Sep 18, 2026',
-                    'receipt_file' => 'final_settlement_receipt.pdf'
-                ],
-            ]
+            'payments' => $payments,
+            'stats' => $stats,
+            'currentQuery' => $q,
+            'currentStatus' => $statusParam,
         ]);
     }
 
-    #[Route('/admin/bookings', name: 'admin_bookings')]
-    public function bookings(): Response
+    #[Route('/admin/bookings', name: 'admin_bookings', methods: ['GET'])]
+    public function bookings(BookingRepository $bookingRepository, Request $request): Response
     {
+        $statusParam = $request->query->getString('status');
+        $q = trim($request->query->getString('q'));
+        $fromParam = $request->query->getString('from');
+        $toParam = $request->query->getString('to');
+
+        if ($fromParam !== '' && $toParam !== '') {
+            try {
+                $from = new \DateTimeImmutable($fromParam);
+                $to = new \DateTimeImmutable($toParam);
+                $bookings = $bookingRepository->findBetween($from, $to);
+            } catch (\Exception) {
+                $bookings = $bookingRepository->findBy([], ['booking_date' => 'ASC', 'booking_time' => 'ASC']);
+            }
+        } else {
+            $bookings = $bookingRepository->findBy([], ['booking_date' => 'ASC', 'booking_time' => 'ASC']);
+        }
+
+        if ($statusParam !== '') {
+            $statusEnum = BookingStatus::tryFrom($statusParam);
+            if ($statusEnum !== null) {
+                $bookings = array_filter($bookings, fn($b) => $b->getStatus() === $statusEnum);
+            }
+        }
+
+        if ($q !== '') {
+            $lowerQ = strtolower($q);
+            $bookings = array_filter($bookings, function ($b) use ($lowerQ) {
+                return str_contains(strtolower($b->getGuestName()), $lowerQ)
+                    || str_contains(strtolower($b->getService()), $lowerQ)
+                    || ($b->getUser() && str_contains(strtolower($b->getUser()->getFullName()), $lowerQ));
+            });
+        }
+
+        $allBookings = $bookingRepository->findAll();
+        $stats = [
+            'total' => count($allBookings),
+            'confirmed' => 0,
+            'pending' => 0,
+            'cancelled' => 0,
+        ];
+        foreach ($allBookings as $b) {
+            match ($b->getStatus()) {
+                BookingStatus::CONFIRMED => $stats['confirmed']++,
+                BookingStatus::PENDING => $stats['pending']++,
+                BookingStatus::CANCELLED => $stats['cancelled']++,
+                default => null,
+            };
+        }
+
         return $this->render('admin/bookings.html.twig', [
             'pageTitle' => 'Scheduled Consultations',
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
-            'stats' => [
-                'total' => 3,
-                'confirmed' => 2,
-                'pending' => 1
-            ],
-            'bookings' => [
-                [
-                    'id' => 1,
-                    'client_name' => 'Angel Queen Tumapon',
-                    'email' => 'angel@tumapon.design',
-                    'service' => 'Design Systems Architecture',
-                    'date' => '2026-10-08',
-                    'time' => '10:00 AM - 11:30 AM',
-                    'format' => 'Google Meet',
-                    'status' => 'confirmed',
-                    'notes' => 'Token naming conventions and component hierarchy alignment.'
-                ],
-                [
-                    'id' => 2,
-                    'client_name' => 'Carlos Gomez',
-                    'email' => 'carlos@fintechvanguard.com',
-                    'service' => 'Sprint Kickoff & Product Strategy',
-                    'date' => '2026-10-10',
-                    'time' => '02:00 PM - 03:00 PM',
-                    'format' => 'Zoom Meeting',
-                    'status' => 'confirmed',
-                    'notes' => 'Review milestone sprint deliverables for banking app.'
-                ],
-                [
-                    'id' => 3,
-                    'client_name' => 'David Lee',
-                    'email' => 'david@archstone.io',
-                    'service' => 'UX Diagnostic & Heuristic Evaluation',
-                    'date' => '2026-10-12',
-                    'time' => '11:00 AM - 12:00 PM',
-                    'format' => 'Google Meet',
-                    'status' => 'pending',
-                    'notes' => 'New consultation request awaiting studio confirmation.'
-                ],
-            ]
+            'bookings' => $bookings,
+            'stats' => $stats,
+            'currentQuery' => $q,
+            'currentStatus' => $statusParam,
         ]);
     }
 
-
-
-    #[Route('/admin/clients', name: 'admin_clients')]
-    public function clients(): Response
+    #[Route('/admin/clients', name: 'admin_clients', methods: ['GET'])]
+    public function clients(UserRepository $userRepository, Request $request): Response
     {
+        $q = trim($request->query->getString('q'));
+        if ($q !== '') {
+            $clients = $userRepository->searchClients($q);
+        } else {
+            $clients = $userRepository->findClients();
+        }
+
         return $this->render('admin/clients.html.twig', [
             'pageTitle' => 'Clients Directory',
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
+            'clients' => $clients,
+            'currentQuery' => $q,
             'stats' => [
-                'total' => 4,
-                'active' => 3
+                'total' => count($clients),
+                'active' => count($clients),
             ],
-            'clients' => [
-                [
-                    'id' => 1,
-                    'name' => 'Maria Santos',
-                    'company' => 'Pesolink Technologies',
-                    'role' => 'Product Lead',
-                    'email' => 'maria@pesolink.ph',
-                    'phone' => '+63 917 000 1234',
-                    'avatar_initials' => 'MS',
-                    'active_projects' => 2,
-                    'total_spend' => '$245,000',
-                    'joined' => 'Jun 14, 2026'
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Ana Reyes',
-                    'company' => 'Cebu Tourism Board',
-                    'role' => 'Director of Digital Media',
-                    'email' => 'ana@cebutourism.ph',
-                    'phone' => '+63 918 555 8899',
-                    'avatar_initials' => 'AR',
-                    'active_projects' => 1,
-                    'total_spend' => '$45,000',
-                    'joined' => 'Aug 10, 2026'
-                ],
-                [
-                    'id' => 3,
-                    'name' => 'Carlos Gomez',
-                    'company' => 'Fintech Vanguard',
-                    'role' => 'VP Engineering',
-                    'email' => 'carlos@fintechvanguard.com',
-                    'phone' => '+1 415 882 0192',
-                    'avatar_initials' => 'CG',
-                    'active_projects' => 1,
-                    'total_spend' => '$80,000',
-                    'joined' => 'Sep 01, 2026'
-                ],
-                [
-                    'id' => 4,
-                    'name' => 'Angel Queen Tumapon',
-                    'company' => 'Independent Consultant',
-                    'role' => 'Principal Architect',
-                    'email' => 'angel@tumapon.design',
-                    'phone' => '+63 920 111 2233',
-                    'avatar_initials' => 'AT',
-                    'active_projects' => 0,
-                    'total_spend' => '$3,500',
-                    'joined' => 'Sep 10, 2026'
-                ],
-            ]
         ]);
     }
 

@@ -24,38 +24,64 @@
     </div>
   </div>
 
+  <!-- Filter Bar (Part C) -->
+  <form method="GET" action="{{ path('admin_inquiries') }}" class="p-4 rounded-2xl bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+    <div class="relative flex-1 w-full">
+      <iconify-icon icon="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890AA] text-xs pointer-events-none"></iconify-icon>
+      <input type="text"
+             name="q"
+             value="{{ currentQuery|default('') }}"
+             placeholder="Search leads by name, email, or company..."
+             class="w-full pl-9 pr-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs text-[#13224B] dark:text-white placeholder-[#8890AA] outline-none transition-all">
+    </div>
+
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+      <select name="status"
+              class="px-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs font-semibold text-[#13224B] dark:text-white outline-none transition-all">
+        <option value="">All Statuses</option>
+        <option value="new" {{ currentStatus == 'new' ? 'selected' : '' }}>New Lead</option>
+        <option value="reviewed" {{ currentStatus == 'reviewed' ? 'selected' : '' }}>Reviewed</option>
+        <option value="contacted" {{ currentStatus == 'contacted' ? 'selected' : '' }}>Contacted</option>
+        <option value="converted" {{ currentStatus == 'converted' ? 'selected' : '' }}>Converted</option>
+      </select>
+
+      <button type="submit"
+              class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <iconify-icon icon="lucide:filter" class="text-xs"></iconify-icon>
+        <span>Filter</span>
+      </button>
+
+      {% if currentQuery or currentStatus %}
+        <a href="{{ path('admin_inquiries') }}"
+           class="px-3 py-2 rounded-xl border border-[rgba(19,34,75,0.15)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/5 text-[#8890AA] hover:text-[#13224B] dark:hover:text-white text-xs font-semibold transition-all whitespace-nowrap">
+          Clear
+        </a>
+      {% endif %}
+    </div>
+  </form>
+
   <!-- Filter Tabs -->
   <div class="flex items-center gap-2 flex-wrap" id="inquiryFilterTabs">
-    <button type="button" 
-            onclick="filterInquiries('all')" 
-            data-filter="all"
-            class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
+    <a href="{{ path('admin_inquiries', currentQuery ? {'q': currentQuery} : {}) }}"
+       class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold {{ currentStatus is empty ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       All ({{ stats.total|default(0) }})
-    </button>
-    <button type="button" 
-            onclick="filterInquiries('new')" 
-            data-filter="new"
-            class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+    </a>
+    <a href="{{ path('admin_inquiries', {'status': 'new'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'new' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       New ({{ stats.new|default(0) }})
-    </button>
-    <button type="button" 
-            onclick="filterInquiries('reviewed')" 
-            data-filter="reviewed"
-            class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+    </a>
+    <a href="{{ path('admin_inquiries', {'status': 'reviewed'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'reviewed' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       Reviewed ({{ stats.reviewed|default(0) }})
-    </button>
-    <button type="button" 
-            onclick="filterInquiries('contacted')" 
-            data-filter="contacted"
-            class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+    </a>
+    <a href="{{ path('admin_inquiries', {'status': 'contacted'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'contacted' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       Contacted ({{ stats.contacted|default(0) }})
-    </button>
-    <button type="button" 
-            onclick="filterInquiries('converted')" 
-            data-filter="converted"
-            class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+    </a>
+    <a href="{{ path('admin_inquiries', {'status': 'converted'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="filter-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'converted' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       Converted ({{ stats.converted|default(0) }})
-    </button>
+    </a>
   </div>
 
   <!-- Leads Table Card -->
@@ -130,8 +156,18 @@
                 <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 text-[#8890AA] mx-auto flex items-center justify-center text-2xl mb-2">
                   <iconify-icon icon="lucide:inbox"></iconify-icon>
                 </div>
-                <p class="font-bold text-sm text-[#13224B] dark:text-white">No inquiries found in pipeline</p>
-                <p class="text-xs mt-1">Create a new lead or await incoming consultations from the client portal.</p>
+                {% if currentQuery or currentStatus %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">
+                    No results for "{{ currentQuery }}"{% if currentStatus %} with status "{{ currentStatus }}"{% endif %}
+                  </p>
+                  <p class="text-xs mt-1">Try refining your keyword query or reset your filter parameters.</p>
+                  <a href="{{ path('admin_inquiries') }}" class="inline-block mt-3 px-3 py-1.5 rounded-xl bg-[#13224B] text-white text-xs font-semibold">
+                    Clear Filters
+                  </a>
+                {% else %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">No inquiries found in pipeline</p>
+                  <p class="text-xs mt-1">Create a new lead or await incoming consultations from the client portal.</p>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}

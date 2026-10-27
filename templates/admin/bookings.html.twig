@@ -8,38 +8,77 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Scheduled Consultations</h1>
+      <h1 class="text-2xl font-extrabold text-[#13224B] dark:text-white tracking-tight">Scheduled Consultations</h1>
       <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Manage client consultation sessions, review calendar slots, and update meeting confirmations.</p>
     </div>
     
     <div class="flex items-center gap-2">
-      <button type="button" 
-              onclick="alert('Sync Calendar placeholder')" 
-              class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-2">
-        <iconify-icon icon="lucide:calendar-plus"></iconify-icon>
-        <span>Add Session</span>
-      </button>
+      <span class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.08)] dark:border-white/10 text-xs font-bold text-[#13224B] dark:text-white shadow-sm">
+        Upcoming: <span class="text-[#4C6CCB] font-extrabold">{{ stats.confirmed|default(0) }} confirmed</span>
+      </span>
     </div>
   </div>
 
+  <!-- Filter Bar (Part C) -->
+  <form method="GET" action="{{ path('admin_bookings') }}" class="p-4 rounded-2xl bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm flex flex-col md:flex-row items-center gap-3">
+    <div class="relative flex-1 w-full">
+      <iconify-icon icon="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890AA] text-xs pointer-events-none"></iconify-icon>
+      <input type="text"
+             name="q"
+             value="{{ currentQuery|default('') }}"
+             placeholder="Search sessions by client, service, or email..."
+             class="w-full pl-9 pr-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs text-[#13224B] dark:text-white placeholder-[#8890AA] outline-none transition-all">
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap w-full md:w-auto">
+      <select name="status"
+              class="px-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs font-semibold text-[#13224B] dark:text-white outline-none transition-all">
+        <option value="">All Statuses</option>
+        <option value="confirmed" {{ currentStatus == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+        <option value="pending" {{ currentStatus == 'pending' ? 'selected' : '' }}>Pending</option>
+        <option value="cancelled" {{ currentStatus == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+      </select>
+
+      <button type="submit"
+              class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <iconify-icon icon="lucide:filter" class="text-xs"></iconify-icon>
+        <span>Filter</span>
+      </button>
+
+      {% if currentQuery or currentStatus %}
+        <a href="{{ path('admin_bookings') }}"
+           class="px-3 py-2 rounded-xl border border-[rgba(19,34,75,0.15)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/5 text-[#8890AA] hover:text-[#13224B] dark:hover:text-white text-xs font-semibold transition-all whitespace-nowrap">
+          Clear
+        </a>
+      {% endif %}
+    </div>
+  </form>
+
   <!-- Filter Tabs -->
   <div class="flex items-center gap-2 flex-wrap">
-    <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
-      All ({{ stats.total|default(3) }})
-    </button>
-    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
-      Confirmed ({{ stats.confirmed|default(2) }})
-    </button>
-    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#4b4b4b] border border-[rgba(19,34,75,0.08)] hover:bg-[#F4F6F8] transition-all">
-      Pending ({{ stats.pending|default(1) }})
-    </button>
+    <a href="{{ path('admin_bookings', currentQuery ? {'q': currentQuery} : {}) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-bold {{ currentStatus is empty ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      All ({{ stats.total|default(0) }})
+    </a>
+    <a href="{{ path('admin_bookings', {'status': 'confirmed'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'confirmed' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      Confirmed ({{ stats.confirmed|default(0) }})
+    </a>
+    <a href="{{ path('admin_bookings', {'status': 'pending'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'pending' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      Pending ({{ stats.pending|default(0) }})
+    </a>
+    <a href="{{ path('admin_bookings', {'status': 'cancelled'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'cancelled' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      Cancelled ({{ stats.cancelled|default(0) }})
+    </a>
   </div>
 
   <!-- Bookings List Card -->
-  <div class="bg-white rounded-3xl border border-[rgba(19,34,75,0.08)] shadow-sm overflow-hidden">
+  <div class="bg-white dark:bg-[#121B42] rounded-3xl border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
-        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] text-[#8890AA] uppercase tracking-wider font-bold">
+        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] dark:border-white/10 text-[#8890AA] uppercase tracking-wider font-bold">
           <tr>
             <th class="py-4 px-6">Client / Contact</th>
             <th class="py-4 px-6">Advisory Service</th>
@@ -49,53 +88,73 @@
             <th class="py-4 px-6 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-[rgba(19,34,75,0.05)]">
+        <tbody class="divide-y divide-[rgba(19,34,75,0.05)] dark:divide-white/5">
           {% for b in bookings %}
             <tr class="hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors">
               <td class="py-4 px-6">
-                <span class="font-bold text-[#13224B] text-sm block">{{ b.client_name }}</span>
-                <span class="text-[11px] text-[#4C6CCB] font-mono">{{ b.email }}</span>
+                <span class="font-bold text-[#13224B] dark:text-white text-sm block">
+                  {{ b.guestName }}
+                </span>
+                <span class="text-[11px] text-[#4C6CCB] dark:text-[#DDEBFF] font-mono">{{ b.guestEmail }}</span>
+                {% if b.user %}
+                  <span class="text-[10.5px] text-[#8890AA] block">Linked: {{ b.user.company|default('Client') }}</span>
+                {% endif %}
               </td>
               <td class="py-4 px-6">
-                <span class="font-semibold text-[#13224B] block">{{ b.service }}</span>
-                <span class="text-[11px] text-[#8890AA]">{{ b.notes }}</span>
+                <span class="font-semibold text-[#13224B] dark:text-white block">{{ b.service }}</span>
+                <span class="text-[11px] text-[#8890AA]">{{ b.durationMin }} mins &bull; ${{ b.price }}</span>
               </td>
               <td class="py-4 px-6">
-                <span class="font-bold text-[#13224B] block">{{ b.date }}</span>
-                <span class="text-[11px] text-amber-600 font-semibold">{{ b.time }}</span>
+                <span class="font-bold text-[#13224B] dark:text-white block">{{ b.bookingDate|date('M d, Y') }}</span>
+                <span class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">{{ b.bookingTime|date('h:i A') }}</span>
               </td>
               <td class="py-4 px-6">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F6F8] dark:bg-white/10 font-medium text-[#13224B] text-[11px]">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F6F8] dark:bg-white/10 font-medium text-[#13224B] dark:text-white text-[11px]">
                   <iconify-icon icon="lucide:video" class="text-xs text-[#4C6CCB]"></iconify-icon>
-                  {{ b.format }}
+                  {{ b.meetingFormat }}
                 </span>
               </td>
               <td class="py-4 px-6">
-                {% if b.status == 'confirmed' %}
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] badge-confirmed whitespace-nowrap">
+                {% if b.status.value == 'confirmed' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] whitespace-nowrap">
                     Confirmed
                   </span>
-                {% elseif b.status == 'pending' %}
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] badge-pending whitespace-nowrap">
+                {% elseif b.status.value == 'pending' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] whitespace-nowrap">
                     Awaiting Studio
                   </span>
                 {% else %}
-                  <span class="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-700">
-                    {{ b.status|capitalize }}
+                  <span class="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300">
+                    {{ b.status.value|capitalize }}
                   </span>
                 {% endif %}
               </td>
               <td class="py-4 px-6 text-right space-x-2">
                 <button type="button" 
-                        onclick="alert('Opening Google Meet video bridge for {{ b.client_name }}')" 
-                        class="px-3 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-sm transition-all">
+                        onclick="alert('Opening video bridge for {{ b.guestName }}')" 
+                        class="px-3 py-1.5 rounded-xl bg-[#4C6CCB] hover:bg-[#3d59af] text-white text-xs font-bold shadow-sm transition-all cursor-pointer">
                   Join Call
                 </button>
-                <button type="button" 
-                        onclick="alert('Reschedule session with {{ b.client_name }}')" 
-                        class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] hover:bg-[#F4F6F8] text-[#13224B] text-xs font-semibold transition-colors">
-                  Reschedule
-                </button>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" class="py-12 text-center text-[#8890AA]">
+                <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 text-[#8890AA] mx-auto flex items-center justify-center text-2xl mb-2">
+                  <iconify-icon icon="lucide:calendar"></iconify-icon>
+                </div>
+                {% if currentQuery or currentStatus %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">
+                    No results for "{{ currentQuery }}"{% if currentStatus %} with status "{{ currentStatus }}"{% endif %}
+                  </p>
+                  <p class="text-xs mt-1">Try refining your keyword query or reset your filter parameters.</p>
+                  <a href="{{ path('admin_bookings') }}" class="inline-block mt-3 px-3 py-1.5 rounded-xl bg-[#13224B] text-white text-xs font-semibold">
+                    Clear Filters
+                  </a>
+                {% else %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">No scheduled consultations found</p>
+                  <p class="text-xs mt-1">Confirmed client bookings and advisory slots will appear here.</p>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}

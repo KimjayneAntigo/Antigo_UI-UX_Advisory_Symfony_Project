@@ -21,32 +21,64 @@
     </div>
   </div>
 
+  <!-- Filter Bar (Part C) -->
+  <form method="GET" action="{{ path('admin_projects') }}" class="p-4 rounded-2xl bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm flex flex-col md:flex-row items-center gap-3">
+    <div class="relative flex-1 w-full">
+      <iconify-icon icon="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890AA] text-xs pointer-events-none"></iconify-icon>
+      <input type="text"
+             name="q"
+             value="{{ currentQuery|default('') }}"
+             placeholder="Search projects by title, code, or client..."
+             class="w-full pl-9 pr-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs text-[#13224B] dark:text-white placeholder-[#8890AA] outline-none transition-all">
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap w-full md:w-auto">
+      <select name="status"
+              class="px-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs font-semibold text-[#13224B] dark:text-white outline-none transition-all">
+        <option value="">All Statuses</option>
+        <option value="in_design" {{ currentStatus == 'in_design' ? 'selected' : '' }}>In Design</option>
+        <option value="completed" {{ currentStatus == 'completed' ? 'selected' : '' }}>Completed</option>
+        <option value="cancelled" {{ currentStatus == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+      </select>
+
+      <select name="category"
+              class="px-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs font-semibold text-[#13224B] dark:text-white outline-none transition-all">
+        <option value="">All Services</option>
+        <option value="UI/UX Design" {{ currentCategory == 'UI/UX Design' ? 'selected' : '' }}>UI/UX Design</option>
+        <option value="Design System Architecture" {{ currentCategory == 'Design System Architecture' ? 'selected' : '' }}>Design System</option>
+        <option value="UX Diagnostic & Heuristic Evaluation" {{ currentCategory == 'UX Diagnostic & Heuristic Evaluation' ? 'selected' : '' }}>UX Diagnostic</option>
+        <option value="Brand Experience & Strategic Advisory" {{ currentCategory == 'Brand Experience & Strategic Advisory' ? 'selected' : '' }}>Brand Strategy</option>
+      </select>
+
+      <button type="submit"
+              class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <iconify-icon icon="lucide:filter" class="text-xs"></iconify-icon>
+        <span>Filter</span>
+      </button>
+
+      {% if currentQuery or currentStatus or currentCategory %}
+        <a href="{{ path('admin_projects') }}"
+           class="px-3 py-2 rounded-xl border border-[rgba(19,34,75,0.15)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/5 text-[#8890AA] hover:text-[#13224B] dark:hover:text-white text-xs font-semibold transition-all whitespace-nowrap">
+          Clear
+        </a>
+      {% endif %}
+    </div>
+  </form>
+
   <!-- Filter Tabs -->
   <div class="flex items-center gap-2 flex-wrap" id="projectFilterTabs">
-    <button type="button"
-            onclick="filterProjects('all')"
-            data-filter="all"
-            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
+    <a href="{{ path('admin_projects', currentQuery ? {'q': currentQuery} : {}) }}"
+       class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold {{ (currentStatus is empty and currentCategory is empty) ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       All ({{ stats.all|default(0) }})
-    </button>
-    <button type="button"
-            onclick="filterProjects('active')"
-            data-filter="active"
-            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+    </a>
+    <a href="{{ path('admin_projects', {'status': 'in_design'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'in_design' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       Active ({{ stats.active|default(0) }})
-    </button>
-    <button type="button"
-            onclick="filterProjects('review')"
-            data-filter="review"
-            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
-      Review ({{ stats.review|default(0) }})
-    </button>
-    <button type="button"
-            onclick="filterProjects('completed')"
-            data-filter="completed"
-            class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] transition-all">
+    </a>
+    <a href="{{ path('admin_projects', {'status': 'completed'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="project-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'completed' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
       Completed ({{ stats.completed|default(0) }})
-    </button>
+    </a>
   </div>
 
   {# Featured Spotlight Card (If active projects exist) #}
@@ -188,13 +220,93 @@
                 <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 text-[#8890AA] mx-auto flex items-center justify-center text-2xl mb-2">
                   <iconify-icon icon="lucide:folder-kanban"></iconify-icon>
                 </div>
-                <p class="font-bold text-sm text-[#13224B] dark:text-white">No projects found</p>
-                <p class="text-xs mt-1">Create your first client project sprint above.</p>
+                {% if currentQuery or currentStatus or currentCategory %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">
+                    No projects found matching "{{ currentQuery }}"{% if currentStatus %} with status "{{ currentStatus }}"{% endif %}{% if currentCategory %} in "{{ currentCategory }}"{% endif %}
+                  </p>
+                  <p class="text-xs mt-1">Try adjusting your keyword search or clear your filter criteria.</p>
+                  <a href="{{ path('admin_projects') }}" class="inline-block mt-3 px-3 py-1.5 rounded-xl bg-[#13224B] text-white text-xs font-semibold">
+                    Clear Filters
+                  </a>
+                {% else %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">No projects found</p>
+                  <p class="text-xs mt-1">Create your first client project sprint above.</p>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Second Table: Category Filtered Query (Instructor findByCategory Pattern) -->
+  <div class="space-y-3 pt-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-bold text-[#13224B] dark:text-white tracking-tight flex items-center gap-2">
+          <span>UI/UX Design Spotlight</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#DDEBFF] text-[#13224B] dark:bg-white/10 dark:text-white">
+            Instructor findByCategory Counterpart
+          </span>
+        </h2>
+        <p class="text-xs text-[#8890AA]">Demonstrates dedicated QueryBuilder category query (<code class="font-mono text-[11px] text-[#6C5BB5] dark:text-[#DDEBFF]">ProjectRepository::findByCategory('UI/UX Design')</code>).</p>
+      </div>
+      <span class="text-xs font-bold text-[#8890AA]">{{ projectsByCategory|length }} sprint(s)</span>
+    </div>
+
+    <div class="bg-white dark:bg-[#121B42] rounded-3xl border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] dark:border-white/10 text-[#8890AA] uppercase tracking-wider font-bold">
+            <tr>
+              <th class="py-3 px-6">Project Code &amp; Title</th>
+              <th class="py-3 px-6">Client</th>
+              <th class="py-3 px-6">Category</th>
+              <th class="py-3 px-6">Phase</th>
+              <th class="py-3 px-6">Budget ($ USD)</th>
+              <th class="py-3 px-6 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[rgba(19,34,75,0.05)] dark:divide-white/5">
+            {% for p in projectsByCategory %}
+              <tr class="hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors">
+                <td class="py-3.5 px-6">
+                  <span class="font-mono text-xs font-bold text-[#6C5BB5] dark:text-[#DDEBFF] block">{{ p.projectCode }}</span>
+                  <a href="{{ path('admin_project_detail', {'id': p.id}) }}" class="font-bold text-[#13224B] dark:text-white hover:text-[#4C6CCB] text-xs">
+                    {{ p.title }}
+                  </a>
+                </td>
+                <td class="py-3.5 px-6 font-semibold text-[#13224B] dark:text-white">
+                  {{ p.clientName }}
+                </td>
+                <td class="py-3.5 px-6 text-[#8890AA]">
+                  {{ p.category }}
+                </td>
+                <td class="py-3.5 px-6">
+                  <span class="px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DDEBFF] text-[#13224B] dark:bg-white/10 dark:text-white">
+                    {{ p.currentPhase.label() }}
+                  </span>
+                </td>
+                <td class="py-3.5 px-6 font-mono font-bold text-[#13224B] dark:text-white">
+                  {{ p.formattedBudget }}
+                </td>
+                <td class="py-3.5 px-6 text-right">
+                  <a href="{{ path('admin_project_detail', {'id': p.id}) }}" class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-xs font-semibold text-[#13224B] dark:text-white hover:bg-[#F4F6F8] dark:hover:bg-white/10 transition-colors">
+                    View &rarr;
+                  </a>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6" class="py-8 text-center text-[#8890AA]">
+                  <p class="font-bold text-xs text-[#13224B] dark:text-white">No projects found in UI/UX Design category.</p>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

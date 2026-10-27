@@ -23,13 +23,14 @@
   <div class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
     
     <!-- 1. Search Bar (Translucent Pill matching Image 1) -->
-    <div class="relative hidden md:block">
+    <form method="GET" action="{{ path('admin_global_search') }}" class="relative hidden md:block">
       <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-xs pointer-events-none"></iconify-icon>
       <input type="text"
              name="q"
+             value="{{ currentQuery|default('') }}"
              placeholder="Search studio..."
              class="topbar-search-input pl-8 pr-3 py-1.5 w-32 lg:w-44 xl:w-52 rounded-full bg-white/10 hover:bg-white/15 focus:bg-white/20 border border-white/15 text-xs text-white placeholder-white/50 outline-none focus:ring-1 focus:ring-[#4C6CCB] transition-all">
-    </div>
+    </form>
 
     <!-- 2. "+ Quick Add" Button (Solid Blue Pill matching Image 1) -->
     <a href="{{ path('admin_project_new') }}"

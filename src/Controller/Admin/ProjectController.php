@@ -31,13 +31,28 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class ProjectController extends AbstractController
 {
     #[Route('', name: 'admin_projects', methods: ['GET'])]
-    public function index(ProjectRepository $projectRepository): Response
+    public function index(ProjectRepository $projectRepository, Request $request): Response
     {
-        $projects = $projectRepository->findBy([], ['created_at' => 'DESC']);
+        $q = trim($request->query->getString('q'));
+        $statusParam = $request->query->getString('status');
+        $categoryParam = trim($request->query->getString('category'));
 
-        // Stats summary for the portfolio header
+        $statusEnum = $statusParam !== '' ? ProjectStatus::tryFrom($statusParam) : null;
+
+        if ($categoryParam !== '') {
+            $projects = $projectRepository->findByCategory($categoryParam);
+        } elseif ($statusEnum !== null) {
+            $projects = $projectRepository->findByStatusType($statusEnum);
+        } elseif ($q !== '') {
+            $projects = $projectRepository->search($q);
+        } else {
+            $projects = $projectRepository->findBy([], ['created_at' => 'DESC']);
+        }
+
+        // Global stats summary across all projects for header pills
+        $allProjects = $projectRepository->findAll();
         $stats = [
-            'all' => count($projects),
+            'all' => count($allProjects),
             'active' => 0,
             'review' => 0,
             'completed' => 0,
@@ -45,7 +60,7 @@ final class ProjectController extends AbstractController
 
         $featuredProject = null;
 
-        foreach ($projects as $p) {
+        foreach ($allProjects as $p) {
             if ($p->isCompleted()) {
                 $stats['completed']++;
             } elseif ($p->isCancelled()) {
@@ -61,13 +76,18 @@ final class ProjectController extends AbstractController
             }
         }
 
+        // Counterpart of the instructor's findByCategory('Electronics') demo
+        $projectsByCategory = $projectRepository->findByCategory('UI/UX Design');
+
         return $this->render('admin/project/index.html.twig', [
             'pageTitle' => 'Projects Portfolio & Sprints',
             'projects' => $projects,
+            'projectsByCategory' => $projectsByCategory,
             'featuredProject' => $featuredProject ?? ($projects[0] ?? null),
             'stats' => $stats,
-            'inquiriesPendingCount' => 1,
-            'paymentsPendingCount' => 2,
+            'currentQuery' => $q,
+            'currentStatus' => $statusParam,
+            'currentCategory' => $categoryParam,
         ]);
     }
 

@@ -16,20 +16,29 @@ use Symfony\Component\Routing\Attribute\Route;
 final class InquiryController extends AbstractController
 {
     #[Route('', name: 'admin_inquiries', methods: ['GET'])]
-    public function index(InquiryRepository $inquiryRepository): Response
+    public function index(InquiryRepository $inquiryRepository, Request $request): Response
     {
-        $inquiries = $inquiryRepository->findBy([], ['created_at' => 'DESC']);
+        $q = trim($request->query->getString('q'));
+        $statusParam = $request->query->getString('status');
+        $statusEnum = $statusParam !== '' ? InquiryStatus::tryFrom($statusParam) : null;
 
-        // Count leads by status for dashboard pipeline stats
+        if ($q !== '' || $statusEnum !== null) {
+            $inquiries = $inquiryRepository->search($q !== '' ? $q : null, $statusEnum);
+        } else {
+            $inquiries = $inquiryRepository->findBy([], ['created_at' => 'DESC']);
+        }
+
+        // Global stats across all inquiries for dashboard tabs
+        $allInquiries = $inquiryRepository->findAll();
         $stats = [
-            'total' => count($inquiries),
+            'total' => count($allInquiries),
             'new' => 0,
             'reviewed' => 0,
             'contacted' => 0,
             'converted' => 0,
         ];
 
-        foreach ($inquiries as $inq) {
+        foreach ($allInquiries as $inq) {
             match ($inq->getStatus()) {
                 InquiryStatus::NEW => $stats['new']++,
                 InquiryStatus::REVIEWED => $stats['reviewed']++,
@@ -43,8 +52,8 @@ final class InquiryController extends AbstractController
             'pageTitle' => 'Inquiry Leads Pipeline',
             'inquiries' => $inquiries,
             'stats' => $stats,
-            'inquiriesPendingCount' => $stats['new'],
-            'paymentsPendingCount' => 2,
+            'currentQuery' => $q,
+            'currentStatus' => $statusParam,
         ]);
     }
 

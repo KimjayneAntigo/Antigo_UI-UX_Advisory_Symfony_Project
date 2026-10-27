@@ -8,35 +8,77 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-extrabold text-[#13224B] tracking-tight">Payments &amp; Settlement Verification</h1>
+      <h1 class="text-2xl font-extrabold text-[#13224B] dark:text-white tracking-tight">Payments &amp; Settlement Verification</h1>
       <p class="text-xs sm:text-sm text-[#8890AA] mt-0.5">Verify manual client payment declarations, review receipts, and reconcile project settlements.</p>
     </div>
     
     <div class="flex items-center gap-2">
-      <span class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/60 text-xs font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-        Awaiting Verification: {{ paymentsPendingCount|default(2) }}
+      <span class="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200/60 dark:border-amber-700/40 text-xs font-bold text-amber-800 dark:text-amber-300">
+        Awaiting Verification: {{ stats.pending|default(0) }}
       </span>
     </div>
   </div>
 
+  <!-- Filter Bar (Part C) -->
+  <form method="GET" action="{{ path('admin_payments') }}" class="p-4 rounded-2xl bg-white dark:bg-[#121B42] border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+    <div class="relative flex-1 w-full">
+      <iconify-icon icon="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890AA] text-xs pointer-events-none"></iconify-icon>
+      <input type="text"
+             name="q"
+             value="{{ currentQuery|default('') }}"
+             placeholder="Search payments by reference, project, or client..."
+             class="w-full pl-9 pr-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs text-[#13224B] dark:text-white placeholder-[#8890AA] outline-none transition-all">
+    </div>
+
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+      <select name="status"
+              class="px-3 py-2 rounded-xl bg-[#F4F6F8] dark:bg-white/5 border border-transparent focus:border-[#4C6CCB] text-xs font-semibold text-[#13224B] dark:text-white outline-none transition-all">
+        <option value="">All Statuses</option>
+        <option value="pending" {{ currentStatus == 'pending' ? 'selected' : '' }}>Pending</option>
+        <option value="verified" {{ currentStatus == 'verified' ? 'selected' : '' }}>Verified</option>
+        <option value="rejected" {{ currentStatus == 'rejected' ? 'selected' : '' }}>Rejected</option>
+      </select>
+
+      <button type="submit"
+              class="px-4 py-2 rounded-xl bg-[#13224B] hover:bg-[#1c3267] text-white text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <iconify-icon icon="lucide:filter" class="text-xs"></iconify-icon>
+        <span>Filter</span>
+      </button>
+
+      {% if currentQuery or currentStatus %}
+        <a href="{{ path('admin_payments') }}"
+           class="px-3 py-2 rounded-xl border border-[rgba(19,34,75,0.15)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/5 text-[#8890AA] hover:text-[#13224B] dark:hover:text-white text-xs font-semibold transition-all whitespace-nowrap">
+          Clear
+        </a>
+      {% endif %}
+    </div>
+  </form>
+
   <!-- Filter Tabs -->
   <div class="flex items-center gap-2 flex-wrap">
-    <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#13224B] text-white shadow-sm transition-all">
-      All ({{ stats.total|default(3) }})
-    </button>
-    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#0E1638] text-[#4b4b4b] dark:text-[#B7BEE0] border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/10 transition-all">
-      Pending ({{ stats.pending|default(2) }})
-    </button>
-    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#0E1638] text-[#4b4b4b] dark:text-[#B7BEE0] border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8] dark:hover:bg-white/10 transition-all">
-      Verified ({{ stats.verified|default(1) }})
-    </button>
+    <a href="{{ path('admin_payments', currentQuery ? {'q': currentQuery} : {}) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-bold {{ currentStatus is empty ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      All ({{ stats.total|default(0) }})
+    </a>
+    <a href="{{ path('admin_payments', {'status': 'pending'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'pending' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      Pending ({{ stats.pending|default(0) }})
+    </a>
+    <a href="{{ path('admin_payments', {'status': 'verified'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'verified' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      Verified ({{ stats.verified|default(0) }})
+    </a>
+    <a href="{{ path('admin_payments', {'status': 'rejected'}|merge(currentQuery ? {'q': currentQuery} : {})) }}"
+       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold {{ currentStatus == 'rejected' ? 'bg-[#13224B] text-white shadow-sm' : 'bg-white dark:bg-[#121B42] text-[#4b4b4b] dark:text-gray-300 border border-[rgba(19,34,75,0.08)] dark:border-white/10 hover:bg-[#F4F6F8]' }} transition-all">
+      Rejected ({{ stats.rejected|default(0) }})
+    </a>
   </div>
 
   <!-- Payments Table Card -->
-  <div class="bg-white rounded-3xl border border-[rgba(19,34,75,0.08)] shadow-sm overflow-hidden">
+  <div class="bg-white dark:bg-[#121B42] rounded-3xl border border-[rgba(19,34,75,0.08)] dark:border-white/10 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
-        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] text-[#8890AA] uppercase tracking-wider font-bold">
+        <thead class="bg-[#F4F6F8] dark:bg-white/5 border-b border-[rgba(19,34,75,0.08)] dark:border-white/10 text-[#8890AA] uppercase tracking-wider font-bold">
           <tr>
             <th class="py-4 px-6">Payment Ref</th>
             <th class="py-4 px-6">Project Code &amp; Title</th>
@@ -47,62 +89,90 @@
             <th class="py-4 px-6 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-[rgba(19,34,75,0.05)]">
+        <tbody class="divide-y divide-[rgba(19,34,75,0.05)] dark:divide-white/5">
           {% for pay in payments %}
             <tr class="hover:bg-[#F4F6F8]/60 dark:hover:bg-white/5 transition-colors">
               <td class="py-4 px-6">
-                <span class="font-mono text-xs font-bold text-[#13224B] block">{{ pay.ref }}</span>
-                <span class="text-[11px] text-[#8890AA] block mt-0.5">{{ pay.submitted_at }}</span>
+                <span class="font-mono text-xs font-bold text-[#13224B] dark:text-white block">{{ pay.reference }}</span>
+                <span class="text-[11px] text-[#8890AA] block mt-0.5">{{ pay.submittedAt|date('M d, Y') }}</span>
               </td>
               <td class="py-4 px-6">
-                <span class="font-mono text-[10.5px] font-bold text-[#6C5BB5] block">{{ pay.project_code }}</span>
-                <span class="font-bold text-[#13224B] text-xs">{{ pay.project_title }}</span>
+                {% if pay.project %}
+                  <span class="font-mono text-[10.5px] font-bold text-[#6C5BB5] dark:text-[#DDEBFF] block">{{ pay.project.projectCode }}</span>
+                  <a href="{{ path('admin_project_detail', {'id': pay.project.id}) }}" class="font-bold text-[#13224B] dark:text-white hover:text-[#4C6CCB] text-xs">
+                    {{ pay.project.title }}
+                  </a>
+                {% else %}
+                  <span class="text-[#8890AA]">—</span>
+                {% endif %}
               </td>
               <td class="py-4 px-6">
-                <span class="font-semibold text-[#13224B] block">{{ pay.client_name }}</span>
-                <span class="text-[11px] text-[#8890AA]">{{ pay.client_company }}</span>
+                {% if pay.user %}
+                  <span class="font-semibold text-[#13224B] dark:text-white block">{{ pay.user.fullName }}</span>
+                  <span class="text-[11px] text-[#8890AA]">{{ pay.user.company|default('—') }}</span>
+                {% else %}
+                  <span class="text-[#8890AA]">—</span>
+                {% endif %}
               </td>
-              <td class="py-4 px-6 font-mono text-sm font-extrabold text-[#13224B]">
-                {{ pay.amount }}
+              <td class="py-4 px-6 font-mono text-sm font-extrabold text-[#13224B] dark:text-white">
+                {{ pay.amountFormatted }}
               </td>
               <td class="py-4 px-6">
-                <span class="px-2.5 py-1 rounded-lg bg-[#F4F6F8] dark:bg-white/10 font-medium text-[#13224B] text-[11px]">
-                  {{ pay.method }}
+                <span class="px-2.5 py-1 rounded-lg bg-[#F4F6F8] dark:bg-white/10 font-medium text-[#13224B] dark:text-white text-[11px]">
+                  {{ pay.method.value|upper }}
                 </span>
               </td>
               <td class="py-4 px-6">
-                {% if pay.status == 'pending' %}
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] badge-pending whitespace-nowrap">
+                {% if pay.status.value == 'pending' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#FFF1D6] text-[#946200] whitespace-nowrap">
                     Pending Verification
                   </span>
-                {% elseif pay.status == 'verified' %}
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] badge-verified whitespace-nowrap">
+                {% elseif pay.status.value == 'verified' %}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-[#DFF6E8] text-[#127A45] whitespace-nowrap">
                     Verified
                   </span>
                 {% else %}
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-700 badge-rejected whitespace-nowrap">
-                    {{ pay.status|capitalize }}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-700 whitespace-nowrap">
+                    {{ pay.status.value|capitalize }}
                   </span>
                 {% endif %}
               </td>
               <td class="py-4 px-6 text-right space-x-2">
-                {% if pay.status == 'pending' %}
+                {% if pay.status.value == 'pending' %}
                   <button type="button" 
-                          onclick="alert('Payment verified: {{ pay.ref }}')" 
-                          class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all">
+                          onclick="alert('Payment verified: {{ pay.reference }}')" 
+                          class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer">
                     Verify
                   </button>
                   <button type="button" 
-                          onclick="alert('Payment flagged: {{ pay.ref }}')" 
-                          class="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-xs font-semibold transition-colors">
+                          onclick="alert('Payment flagged: {{ pay.reference }}')" 
+                          class="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-xs font-semibold transition-colors cursor-pointer">
                     Reject
                   </button>
                 {% else %}
-                  <button type="button" 
-                          onclick="alert('Viewing receipt: {{ pay.receipt_file }}')" 
-                          class="px-3 py-1.5 rounded-xl border border-[rgba(19,34,75,0.1)] dark:border-white/10 text-[#13224B] dark:text-[#EEF1FF] hover:bg-[#F4F6F8] dark:hover:bg-white/10 text-xs font-semibold transition-colors">
-                    Receipt
-                  </button>
+                  <span class="text-xs font-semibold text-[#8890AA]">
+                    Settled
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" class="py-12 text-center text-[#8890AA]">
+                <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 text-[#8890AA] mx-auto flex items-center justify-center text-2xl mb-2">
+                  <iconify-icon icon="lucide:receipt"></iconify-icon>
+                </div>
+                {% if currentQuery or currentStatus %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">
+                    No results for "{{ currentQuery }}"{% if currentStatus %} with status "{{ currentStatus }}"{% endif %}
+                  </p>
+                  <p class="text-xs mt-1">Try refining your keyword query or reset your filter parameters.</p>
+                  <a href="{{ path('admin_payments') }}" class="inline-block mt-3 px-3 py-1.5 rounded-xl bg-[#13224B] text-white text-xs font-semibold">
+                    Clear Filters
+                  </a>
+                {% else %}
+                  <p class="font-bold text-sm text-[#13224B] dark:text-white">No payment declarations found</p>
+                  <p class="text-xs mt-1">Client manual deposit slips and settlements will appear here.</p>
                 {% endif %}
               </td>
             </tr>
